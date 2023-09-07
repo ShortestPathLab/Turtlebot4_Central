@@ -1,4 +1,5 @@
 {
     "agent_id": "int",
+    "timestep": "int",
     "position": ["float", "float", "float"]
 }

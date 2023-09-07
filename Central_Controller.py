@@ -1,21 +1,17 @@
 import json
+from enum import Enum
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from typing import Dict, List, Tuple
 from urllib import parse as urlparse
-from typing import List, Tuple
-from File_Handler import load_paths
 
-X = Y = Theta = float
-Position = Tuple[X, Y, Theta]
+from Agent import Agent
+from Execution_Policy import ExecutionPolicy
+from Position import Position
 
-hostName: str = "localhost"
-serverPort: int = 8080
-
-agent_plans: List[List[Position]] = load_paths("result.path")
-agent_timesteps: List[int] = [0 for _ in range(len(agent_plans))]
-agent_positions: List[Position] = [None for _ in range(len(agent_plans))]
-agent_status: List[str] = [None for _ in range(len(agent_plans))]
 
 class CentralController(BaseHTTPRequestHandler):
+
+    execution_policy: ExecutionPolicy
 
     def do_GET(self):
 
@@ -32,16 +28,23 @@ class CentralController(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
         self.end_headers()
+
         message = {}
         message["agent_id"] = agent_id
-        message["position"] = agent_plans[agent_id][0]
+
+        position, timestep = self.execution_policy.get_next_position(agent_id)
+
+        message["timestep"] = timestep
+        message["position"] = position
         self.wfile.write(bytes(json.dumps(message), "utf-8"))
 
     def do_POST(self):
         content_length = int(self.headers['Content-Length'])
         post_data = self.rfile.read(content_length)
         data = json.loads(post_data)
-        print(data)
+
+        self.execution_policy.update(data)
+        
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
         self.end_headers()
@@ -49,7 +52,13 @@ class CentralController(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
+
+    hostName: str = "0.0.0.0"
+    serverPort: int = 8080
+    path_file: str = "result.path"
+
     server = HTTPServer((hostName, serverPort), CentralController)
+    server.ex
     print(f"Server started http://{hostName}:{serverPort}")
 
     try:
