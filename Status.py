@@ -6,6 +6,7 @@ class Status(Enum):
     Executing = 1
     Succeeded = 2
     Waiting = 3
+    Aborted = 4
     
     @classmethod
     def value_of(cls, value):

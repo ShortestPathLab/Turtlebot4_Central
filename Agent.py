@@ -11,20 +11,20 @@ class Agent:
     num_of_agents: int = 0
 
     # Class Attribute containing plans of all agents
-    plans: Dict[List[Position]] = None
+    plans: Dict[int ,List[Position]] = None
 
 
-    def __init__(self, plans: str):
+    def __init__(self, filename: str):
         self.position: Position = None  # current position of agent 
         self.timestep: int = 0
         self._id: int = Agent.num_of_agents  # id corresponding to agents position in plans
         self.status: Status = Status.Waiting
         Agent.num_of_agents += 1
 
-        if self.plans is None: self.load_paths
+        if Agent.plans is None: self.load_paths(filename)
 
     def load_paths(self, filename: str):
-        self.plans = load_paths(filename)
+        Agent.plans = load_paths(filename)
 
     def get_next_position(self):
         if self.timestep >= len(Agent.plans.get(self._id)):

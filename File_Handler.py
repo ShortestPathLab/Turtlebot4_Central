@@ -1,9 +1,9 @@
 import logging
 import os
 from typing import List, Tuple
+from Position import Position
 
-
-def load_paths(path_file: str = None) -> List[List[Tuple[int]]]:
+def load_paths(path_file: str = None) -> List[List[Position]]:
 
     print("Loading paths from "+str(path_file), end="... ")
     if not os.path.exists(path_file):
@@ -23,7 +23,7 @@ def load_paths(path_file: str = None) -> List[List[Tuple[int]]]:
                 cur_x = float(cur_loc.split(",")[1])
                 cur_y = float(cur_loc.split(",")[0].split("(")[1])
                 cur_theta = float(cur_loc.split(",")[2].split(")")[0])
-                paths[ag_idx].append((cur_x, cur_y, cur_theta))
+                paths[ag_idx].append(Position(cur_x, cur_y, cur_theta))
 
 
     return paths

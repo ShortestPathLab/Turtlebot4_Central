@@ -6,12 +6,13 @@ from urllib import parse as urlparse
 
 from Agent import Agent
 from Execution_Policy import ExecutionPolicy
+from Minimum_Communication_Policy import MCP
 from Position import Position
 
 
 class CentralController(BaseHTTPRequestHandler):
 
-    execution_policy: ExecutionPolicy
+    execution_policy: ExecutionPolicy = MCP("result.path", 2)
 
     def do_GET(self):
 
@@ -35,7 +36,7 @@ class CentralController(BaseHTTPRequestHandler):
         position, timestep = self.execution_policy.get_next_position(agent_id)
 
         message["timestep"] = timestep
-        message["position"] = position
+        message["position"] = position.toTuple()
         self.wfile.write(bytes(json.dumps(message), "utf-8"))
 
     def do_POST(self):
@@ -51,20 +52,19 @@ class CentralController(BaseHTTPRequestHandler):
         self.wfile.write(post_data)
 
 
+
 if __name__ == "__main__":
 
     hostName: str = "0.0.0.0"
     serverPort: int = 8080
-    path_file: str = "result.path"
 
     server = HTTPServer((hostName, serverPort), CentralController)
-    server.ex
-    print(f"Server started http://{hostName}:{serverPort}")
+    server.RequestHandlerClass.execution_policy
 
+    print(f"Server started http://{hostName}:{serverPort}")
     try:
         server.serve_forever()
     except KeyboardInterrupt:
         print("Stopping server")
-
     server.server_close()
     print("Server stopped")

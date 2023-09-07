@@ -2,15 +2,15 @@ from typing import List, Tuple
 
 from Agent import Agent
 from Constraint_Table import ConstraintTable
-from Execution_Policy import Execution_Policy
+from Execution_Policy import ExecutionPolicy
 from Position import Position
 from Status import Status
 
 
-class MCP(Execution_Policy):
+class MCP(ExecutionPolicy):
 
     def __init__(self, plan_file: str, num_of_agents: int) -> None:
-        self.agents: List[Agent]  = [Agent(plan_file) for _ in num_of_agents]
+        self.agents: List[Agent]  = [Agent(plan_file) for _ in range(num_of_agents)]
         self.constraint_table: ConstraintTable = ConstraintTable(Agent.plans)
 
 
@@ -25,28 +25,30 @@ class MCP(Execution_Policy):
             return position, timestep
 
 
-        next_timestep = agent.timestep
-        initial_position = agent.position
+        timestep = agent.timestep
+        position = agent.position
 
-        #Do While Loop 
-        while True:
+        while timestep+1 < len(agent.get_plan()):
 
-            # Check if we are required to turn
+            next_timestep = timestep+1
             next_position = agent.view_position(next_timestep)
-            if initial_position.theta != next_position.theta: break
 
-            # Check if we are scheduldd at the next position
-            future_timestep = next_timestep + 1
-            if future_timestep < len(agent.get_plan()) and \
-                not self.constraint_table.scheduled(agent.view_position(future_timestep), agent_id): break
+            # Check if we are schedulded at the next position
+            if next_timestep < len(agent.get_plan()) and \
+                not self.constraint_table.scheduled(next_position, agent_id): break
             
-            # Stop Condition
-            if next_timestep + 1 >= len(agent.get_plan()): break
-            next_timestep += 1
+            # If we are next scheduled we an go to next position. 
+            timestep = next_timestep
+            position = next_position
+            
+            # if the next position requires a turn we stay where we are.
+            if agent.position.theta != next_position.theta: break
+            
+            timestep+=1
         
-        agent.timestep = next_timestep
 
-        return next_position, timestep
+        agent.timestep = timestep
+        return position, timestep
 
 
     def update(self, data):
@@ -54,12 +56,11 @@ class MCP(Execution_Policy):
         agent_id: int = data.get("agent_id")
         agent: Agent = self.agents[agent_id]  # Mutate Agent Data
 
-        agent.position: Position = data.get("position")
+        agent.position: Position = Position(*data.get("position"))
         agent.status: Status = Status.value_of(data.get("status"))
 
         if agent.status == Status.Succeeded:
-            agent.timestep
             agent.position = agent.view_position(agent.timestep)
-            self.constraint_table.delete_path(agent_id, agent.get_plan(), agent.timestep)
+            self.constraint_table.remove_path(agent_id, agent.get_plan(), agent.timestep)
 
         print(agent)
