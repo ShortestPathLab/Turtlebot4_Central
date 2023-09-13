@@ -1,13 +1,14 @@
-import logging
 import os
-from typing import List, Tuple
+from typing import List
+
 from Position import Position
+
 
 def load_paths(path_file: str = None) -> List[List[Position]]:
 
     print("Loading paths from "+str(path_file), end="... ")
     if not os.path.exists(path_file):
-        logging.warning("\nNo path file is found!")
+        print("\nNo path file is found!")
         return
 
     paths = dict()

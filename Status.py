@@ -9,9 +9,9 @@ class Status(Enum):
     Aborted = 4
     
     @classmethod
-    def value_of(cls, value):
+    def from_string(cls, string: str):
         for k, v in cls.__members__.items():
-            if k == value:
+            if k == string:
                 return v
         else:
-            raise ValueError(f"'{cls.__name__}' enum not found for '{value}'")
+            raise ValueError(f"'{cls.__name__}' enum not found for '{string}'")

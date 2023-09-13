@@ -1,6 +1,3 @@
-from typing import Dict, List, Tuple
-
-from Position import Position
 
 class GridConstraint:
     def __init__(self) -> None:

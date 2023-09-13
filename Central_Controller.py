@@ -1,13 +1,10 @@
 import json
-from enum import Enum
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from typing import Dict, List, Tuple
+from typing import Dict, List
 from urllib import parse as urlparse
 
-from Agent import Agent
 from Execution_Policy import ExecutionPolicy
 from Minimum_Communication_Policy import MCP
-from Position import Position
 
 
 class CentralController(BaseHTTPRequestHandler):
@@ -33,6 +30,7 @@ class CentralController(BaseHTTPRequestHandler):
         message = {}
         message["agent_id"] = agent_id
 
+        # Fullfill agents request for position data
         position, timestep = self.execution_policy.get_next_position(agent_id)
 
         message["timestep"] = timestep
@@ -42,8 +40,9 @@ class CentralController(BaseHTTPRequestHandler):
     def do_POST(self):
         content_length = int(self.headers['Content-Length'])
         post_data = self.rfile.read(content_length)
-        data = json.loads(post_data)
+        data: Dict = json.loads(post_data)
 
+        # Update execution policy with incoming agent data.
         self.execution_policy.update(data)
         
         self.send_response(200)
@@ -59,7 +58,6 @@ if __name__ == "__main__":
     serverPort: int = 8080
 
     server = HTTPServer((hostName, serverPort), CentralController)
-    server.RequestHandlerClass.execution_policy
 
     print(f"Server started http://{hostName}:{serverPort}")
     try:

@@ -1,9 +1,8 @@
 import abc
-from typing import List, Dict
+from typing import Dict
 
-from Agent import Agent
 from Position import Position
-from Status import Status
+
 
 class ExecutionPolicy(abc.ABC):
 
@@ -14,4 +13,4 @@ class ExecutionPolicy(abc.ABC):
     @abc.abstractmethod
     def update(self, data: Dict):
         raise NotImplementedError
-    
+        

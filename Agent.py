@@ -1,5 +1,5 @@
 
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 from File_Handler import load_paths
 from Position import Position
@@ -7,8 +7,6 @@ from Status import Status
 
 
 class Agent:
-
-    num_of_agents: int = 0
 
     # Class Attribute containing plans of all agents
     plans: Dict[int ,List[Position]] = None
@@ -19,14 +17,13 @@ class Agent:
         self.timestep: int = 0
         self._id: int = Agent.num_of_agents  # id corresponding to agents position in plans
         self.status: Status = Status.Waiting
-        Agent.num_of_agents += 1
 
         if Agent.plans is None: self.load_paths(filename)
 
     def load_paths(self, filename: str):
         Agent.plans = load_paths(filename)
 
-    def get_next_position(self):
+    def get_next_position(self) -> Position:
         if self.timestep >= len(Agent.plans.get(self._id)):
             return None
 
@@ -34,7 +31,7 @@ class Agent:
         self.timestep += 1
         return position
     
-    def get_plan(self):
+    def get_plan(self) -> List[Position]:
         return Agent.plans.get(self._id)
 
     def view_position(self, timestep: int) -> Position:
