@@ -50,7 +50,7 @@ class MCP(ExecutionPolicy):
         return position, timestep
 
 
-    def update(self, data):
+    def update(self, data) -> None:
 
         agent_id: int = data.get("agent_id")
         agent: Agent = self.agents[agent_id]  # Mutate Agent Data

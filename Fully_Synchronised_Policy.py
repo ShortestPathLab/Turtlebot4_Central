@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from Agent import Agent
 from Execution_Policy import ExecutionPolicy
@@ -13,7 +13,7 @@ class FSP(ExecutionPolicy):
         self.agents: List[Agent] = [Agent(plan_file) for _ in range(num_of_agents)]
         self.current_timestep: int = 0
 
-    def get_next_position(self, index: int) -> Position:
+    def get_next_position(self, index: int) -> Tuple[Position, int]:
 
         agent = self.agents[index]
 
@@ -23,7 +23,7 @@ class FSP(ExecutionPolicy):
             
         return agent.view_position(self.current_timestep), self.current_timestep
           
-    def update(self, data: Dict):
+    def update(self, data: Dict) -> None:
 
         agent_id: int = data.get("agent_id")
         agent: Agent = self.agents[agent_id]  # Mutate Agent Data

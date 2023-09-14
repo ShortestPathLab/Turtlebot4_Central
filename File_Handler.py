@@ -1,10 +1,10 @@
 import os
-from typing import List
+from typing import List, Dict
 
 from Position import Position
 
 
-def load_paths(path_file: str = None) -> List[List[Position]]:
+def load_paths(path_file: str = None) -> Dict[List[Position]]:
 
     print("Loading paths from "+str(path_file), end="... ")
     if not os.path.exists(path_file):

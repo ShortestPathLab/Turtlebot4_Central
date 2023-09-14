@@ -20,7 +20,7 @@ class Agent:
 
         if Agent.plans is None: self.load_paths(filename)
 
-    def load_paths(self, filename: str):
+    def load_paths(self, filename: str) -> None:
         Agent.plans = load_paths(filename)
 
     def get_next_position(self) -> Position:

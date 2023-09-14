@@ -15,7 +15,7 @@ class ScheduleTable:
 
 
     # This needs to be implemented in c++ its so gross how python handles this.
-    def add_path(self, agent_id: int, path: List[Position]):
+    def add_path(self, agent_id: int, path: List[Position]) -> None:
 
         for timestep, position in enumerate(path):
             if self.path_table .get((position.x, position.y)) is None:
@@ -42,13 +42,13 @@ class ScheduleTable:
             return constraint.agent_id == agent_id
 
     
-    def remove_path(self, agent_id: int, path: List[Position], timestep: int):
+    def remove_path(self, agent_id: int, path: List[Position], timestep: int) -> None:
 
         for timestep, position in enumerate(path):
             self.delete_entry(position, agent_id, timestep)
 
 
-    def delete_entry(self, position: Position, agent_id: int, timestep: int):
+    def delete_entry(self, position: Position, agent_id: int, timestep: int) -> None:
  
         constraint: GridConstraint = self.path_table.get((position.x, position.y))[timestep]
 
