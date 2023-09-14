@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Tuple
 
+
 # Position Struct
 @dataclass
 class Position:
