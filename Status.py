@@ -10,7 +10,7 @@ class Status(Enum):
     SUCCEEDED = 2
     WAITING = 3
     ABORTED = 4
-    
+
     @classmethod
     def from_string(cls, string: str):
         """

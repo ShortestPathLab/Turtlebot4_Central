@@ -79,7 +79,7 @@ class ScheduleTable:
                 continue
             return constraint.agent_id == agent_id
 
-    
+
     def remove_path(self, agent_id: int, path: List[Position], max_timestep: int) -> None:
         """
         Removes a path from the schedule table.
@@ -116,8 +116,5 @@ class ScheduleTable:
 
         if constraint is not None:
             assert constraint.agent_id == agent_id
-        
-        self.path_table.get((position.x,position.y))[timestep] = None
 
-        
-        
+        self.path_table.get((position.x,position.y))[timestep] = None
