@@ -1,18 +1,30 @@
 import json
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler
 from typing import Dict, List
 from urllib import parse as urlparse
 
 from Execution_Policy import ExecutionPolicy
-from Fully_Synchronised_Policy import FSP
+# from Fully_Synchronised_Policy import FSP
 from Minimum_Communication_Policy import MCP
 
-
 class CentralController(BaseHTTPRequestHandler):
+    """
+    A class representing the central controller for a multi-agent system.
+
+    Attributes:
+    - execution_policy (ExecutionPolicy): An execution policy object that determines
+      the next position of an agent.
+    """
 
     execution_policy: ExecutionPolicy = MCP("result.path", 2)
 
     def do_GET(self):
+        """
+        Handles GET requests from agents.
+
+        Returns:
+        - None
+        """
         agent_id: List[int] = urlparse.parse_qs(urlparse.urlparse(self.path).query).get('agent_id', None)
 
         if not agent_id:
@@ -38,6 +50,12 @@ class CentralController(BaseHTTPRequestHandler):
         self.wfile.write(bytes(json.dumps(message), "utf-8"))
 
     def do_POST(self):
+        """
+        Handles POST requests from agents.
+
+        Returns:
+        - None
+        """
         content_length = int(self.headers['Content-Length'])
         post_data = self.rfile.read(content_length)
         data: Dict = json.loads(post_data)
@@ -49,20 +67,3 @@ class CentralController(BaseHTTPRequestHandler):
         self.send_header("Content-Type", "application/json")
         self.end_headers()
         self.wfile.write(post_data)
-
-
-
-if __name__ == "__main__":
-
-    hostName: str = "0.0.0.0"
-    serverPort: int = 8080
-
-    server = HTTPServer((hostName, serverPort), CentralController)
-
-    print(f"Server started http://{hostName}:{serverPort}")
-    try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        print("Stopping server")
-    server.server_close()
-    print("Server stopped")

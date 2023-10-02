@@ -60,7 +60,7 @@ class FSP(ExecutionPolicy):
             agent.status = Status.EXECUTING
 
         return agent.view_position(self.current_timestep), self.current_timestep
-     
+
     def update(self, data: Dict) -> None:
         """
         Updates the position and status of the agent with the given data.
