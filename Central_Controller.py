@@ -4,6 +4,7 @@ from typing import Dict, List
 from urllib import parse as urlparse
 
 from Execution_Policy import ExecutionPolicy
+from Fully_Synchronised_Policy import FSP
 from Minimum_Communication_Policy import MCP
 
 
@@ -12,15 +13,14 @@ class CentralController(BaseHTTPRequestHandler):
     execution_policy: ExecutionPolicy = MCP("result.path", 2)
 
     def do_GET(self):
-
         agent_id: List[int] = urlparse.parse_qs(urlparse.urlparse(self.path).query).get('agent_id', None)
 
         if not agent_id:
             return
-        
+
         if not agent_id[0].isdigit():
             return
-        
+
         agent_id = int(agent_id[0])
 
         self.send_response(200)
@@ -34,7 +34,7 @@ class CentralController(BaseHTTPRequestHandler):
         position, timestep = self.execution_policy.get_next_position(agent_id)
 
         message["timestep"] = timestep
-        message["position"] = position.toTuple()
+        message["position"] = position.to_tuple()
         self.wfile.write(bytes(json.dumps(message), "utf-8"))
 
     def do_POST(self):
@@ -44,7 +44,7 @@ class CentralController(BaseHTTPRequestHandler):
 
         # Update execution policy with incoming agent data.
         self.execution_policy.update(data)
-        
+
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
         self.end_headers()
