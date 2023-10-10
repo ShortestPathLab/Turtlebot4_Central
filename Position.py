@@ -21,7 +21,7 @@ class Position:
     --------
     __repr__() -> str
         Returns a string representation of the position in the format "x,y,theta".
-    toTuple() -> Tuple
+    to_tuple() -> Tuple
         Returns a tuple representation of the position in the format (x, y, theta).
     """
     x: float

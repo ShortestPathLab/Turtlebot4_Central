@@ -1,10 +1,11 @@
 import json
 from http.server import BaseHTTPRequestHandler
+
 from typing import Dict, List
 from urllib import parse as urlparse
 
 from Execution_Policy import ExecutionPolicy
-# from Fully_Synchronised_Policy import FSP
+from Fully_Synchronised_Policy import FSP
 from Minimum_Communication_Policy import MCP
 
 class CentralController(BaseHTTPRequestHandler):
@@ -43,7 +44,7 @@ class CentralController(BaseHTTPRequestHandler):
         message["agent_id"] = agent_id
 
         # Fullfill agents request for position data
-        position, timestep = self.execution_policy.get_next_position(agent_id)
+        position, timestep = CentralController.execution_policy.get_next_position(agent_id)
 
         message["timestep"] = timestep
         message["position"] = position.to_tuple()
@@ -61,7 +62,7 @@ class CentralController(BaseHTTPRequestHandler):
         data: Dict = json.loads(post_data)
 
         # Update execution policy with incoming agent data.
-        self.execution_policy.update(data)
+        CentralController.execution_policy.update(data)
 
         self.send_response(200)
         self.send_header("Content-Type", "application/json")

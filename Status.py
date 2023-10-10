@@ -26,7 +26,16 @@ class Status(Enum):
             ValueError: If the given string does not correspond to any enum value.
         """
         for k, v in cls.__members__.items():
-            if k == string:
+            if k.lower() == string.lower():
                 return v
 
         raise ValueError(f"'{cls.__name__}' enum not found for '{string}'")
+
+    def __str__(self):
+        """
+        Returns the string representation of the enum value.
+
+        Returns:
+            The string representation of the enum value.
+        """
+        return self.name

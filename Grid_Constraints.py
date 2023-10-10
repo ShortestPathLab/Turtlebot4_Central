@@ -8,9 +8,9 @@ class GridConstraint:
     -----------
     agent_id : int
         The ID of the agent that this constraint applies to.
-    v_ : bool
+    vertex : bool
         A boolean indicating whether the constraint is satisfied.
-    e_ : float
+    edge : float
         The value of the constraint.
     timestep_ : int
         The timestep at which the constraint applies.
