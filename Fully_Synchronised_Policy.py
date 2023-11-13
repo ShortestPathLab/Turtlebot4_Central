@@ -70,10 +70,24 @@ class FSP(ExecutionPolicy):
         data : Dict
             A dictionary containing the data to update the agent with.
         """
-        agent_id: int = data.get("agent_id")
+        if "agent_id" not in data:
+            print("Error: Agent ID not found in data.")
+            exit(1)
+
+        agent_id: int = data["agent_id"]
         agent: Agent = self.agents[agent_id]  # Mutate Agent Data
-        agent.position: Position = Position(*data.get("position"))
-        agent.status: Status = Status.from_string(data.get("status"))
+
+        if "position" not in data:
+            print("Error: Position not found in data.")
+            exit(1)
+
+        agent.position = Position(*data["position"])
+
+        if "status" not in data:
+            print("Error: Status not found in data.")
+            exit(1)
+
+        agent.status = Status.from_string(data["status"])
 
         if agent.status == Status.SUCCEEDED:
             agent.position = agent.view_position(agent.timestep)

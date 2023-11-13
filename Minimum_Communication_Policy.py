@@ -38,6 +38,11 @@ class MCP(ExecutionPolicy):
             The number of agents.
         """
         self.agents: List[Agent] = [Agent(plan_file) for _ in range(num_of_agents)]
+
+        if Agent.plans is None:
+            print("Error: Plans have not been loaded.")
+            exit(1)
+
         self.schedule_table: ScheduleTable = ScheduleTable(Agent.plans)
 
     def get_next_position(self, agent_id) -> Tuple[Position, int]:
@@ -94,8 +99,8 @@ class MCP(ExecutionPolicy):
         """
         agent_id: int = data.get("agent_id")
         agent: Agent = self.agents[agent_id]  # Mutate Agent Data
-        agent.position: Position = Position(*data.get("position"))
-        agent.status: Status = Status.from_string(data.get("status"))
+        agent.position = Position(*data.get("position"))
+        agent.status = Status.from_string(data.get("status"))
         agent.timestep = data.get("timestep")
 
         if agent.status == Status.SUCCEEDED:

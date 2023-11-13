@@ -15,10 +15,10 @@ class GridConstraint:
     """
 
     def __init__(self) -> None:
-        self.agent_id: int = None
+        self.agent_id: int | None = None
         self.vertex: bool = False
-        self.edge: float = None
-        self.timestep_: int = None
+        self.edge: float | None = None
+        self.timestep_: int | None = None
 
     def __repr__(self) -> str:
         return f"{self.agent_id}"

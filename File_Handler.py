@@ -4,7 +4,7 @@ from typing import Dict, List
 from Position import Position
 
 
-def load_paths(path_file: str = None) -> Dict[int, List[Position]]:
+def load_paths(path_file: str | None = None) -> Dict[int, List[Position]]:
     """
     Load paths from a file and return a dictionary of paths for each agent.
 
@@ -15,12 +15,13 @@ def load_paths(path_file: str = None) -> Dict[int, List[Position]]:
         A dictionary of paths for each agent, where the key is the
         agent index and the value is a list of Positions.
     """
-    print("Loading paths from " + str(path_file), end="... ")
-    if not os.path.exists(path_file):
-        print("\nNo path file is found!")
-        return
 
-    paths = dict()
+    print("Loading paths from " + str(path_file), end="... ")
+    if path_file is None or not os.path.exists(path_file):
+        print("\nNo path file is found!")
+        exit(1)
+
+    paths: Dict[int, List[Position]] = dict()
     with open(path_file, mode="r", encoding="utf-8") as fin:
         for line in fin.readlines():
             if line.split(" ")[0] != "Agent":

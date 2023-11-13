@@ -41,3 +41,12 @@ class Position:
         Tuple: A tuple containing the x, y, and theta values of the Position object.
         """
         return (self.x, self.y, self.theta)
+
+    def __hash__(self) -> int:
+        """
+        Returns a unique hash value for the Position object based on its x and y coordinates.
+
+        Returns:
+        int: A unique hash value for the Position object.
+        """
+        return hash((self.x, self.y))

@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from Grid_Constraints import GridConstraint
 from Position import Position
@@ -25,7 +25,7 @@ class ScheduleTable:
             A dictionary that maps an agent ID to a list of positions
             that the agent will visit.
         """
-        self.path_table = {}
+        self.path_table: Dict[Position, List[GridConstraint | None]] = {}
 
         for agent_id, agent_plan in agent_plans.items():
             self.add_path(agent_id, agent_plan)
@@ -42,20 +42,14 @@ class ScheduleTable:
             A list of positions that the agent will visit.
         """
         for timestep, position in enumerate(path):
-            if self.path_table.get((position.x, position.y)) is None:
-                self.path_table[(position.x, position.y)] = []
+            if position not in self.path_table:
+                self.path_table[position] = []
 
-            if len(self.path_table.get((position.x, position.y))) <= timestep:
-                self.path_table[(position.x, position.y)].extend(
-                    [None]
-                    * (
-                        timestep
-                        - len(self.path_table.get((position.x, position.y)))
-                        + 1
-                    )
-                )
+            if len(self.path_table[position]) <= timestep:
+                difference = timestep - len(self.path_table[position]) + 1
+                self.path_table[position].extend([None] * difference)
 
-            assert self.path_table.get((position.x, position.y))[timestep] is None
+            assert self.path_table[position][timestep] is None
 
             constraint = GridConstraint()
             constraint.agent_id = agent_id
@@ -63,7 +57,7 @@ class ScheduleTable:
             constraint.edge = position.theta
             constraint.timestep_ = timestep
 
-            self.path_table[(position.x, position.y)][timestep] = constraint
+            self.path_table[position][timestep] = constraint
 
     def scheduled(self, position: Position, agent_id: int) -> bool:
         """
@@ -82,10 +76,11 @@ class ScheduleTable:
             True if the position is scheduled for the given agent,
             False otherwise.
         """
-        for constraint in self.path_table[(position.x, position.y)]:
+        for constraint in self.path_table[position]:
             if constraint is None:
                 continue
             return constraint.agent_id == agent_id
+        return False
 
     def remove_path(
         self, agent_id: int, path: List[Position], max_timestep: int
@@ -120,11 +115,13 @@ class ScheduleTable:
         timestep : int
             The timestep of the entry to delete.
         """
-        constraint: GridConstraint = self.path_table.get((position.x, position.y))[
-            timestep
-        ]
+        constraints = self.path_table.get(position)
+
+        if constraints is None:
+            return
+
+        constraint = constraints[timestep]
 
         if constraint is not None:
             assert constraint.agent_id == agent_id
-
-        self.path_table.get((position.x, position.y))[timestep] = None
+            self.path_table[position][timestep] = None

@@ -17,7 +17,7 @@ class Agent:
     """
 
     # Class Attribute containing plans of all agents
-    plans: Dict[int, List[Position]] = None
+    plans: Dict[int, List[Position]] | None = None
     num_agents: int = 0
 
     def __init__(self, filename: str):
@@ -27,7 +27,7 @@ class Agent:
         Args:
         - filename (str): name of the file containing the agent's plan
         """
-        self.position: Position = None
+        self.position: Position | None = None
         self.timestep: int = 0
         self._id: int = Agent.num_agents
         self.status: Status = Status.WAITING
@@ -45,17 +45,21 @@ class Agent:
         """
         Agent.plans = load_paths(filename)
 
-    def get_next_position(self) -> Position:
+    def get_next_position(self) -> Position | None:
         """
         Returns the next position of the agent.
 
         Returns:
         - Position: the next position of the agent
         """
-        if self.timestep >= len(Agent.plans.get(self._id)):
+        if Agent.plans is None:
+            print("Error: Plans have not been loaded.")
+            exit(1)
+
+        if self.timestep >= len(Agent.plans[self._id]):
             return None
 
-        position = Agent.plans.get(self._id)[self.timestep]
+        position = Agent.plans[self._id][self.timestep]
         self.timestep += 1
         return position
 
@@ -66,7 +70,11 @@ class Agent:
         Returns:
         - List[Position]: the plan of the agent
         """
-        return Agent.plans.get(self._id)
+        if Agent.plans is None:
+            print("Error: Plans have not been loaded.")
+            exit(1)
+
+        return Agent.plans[self._id]
 
     def view_position(self, timestep: int) -> Position:
         """
@@ -78,7 +86,11 @@ class Agent:
         Returns:
         - Position: the position of the agent at the given timestep
         """
-        return Agent.plans.get(self._id)[timestep]
+        if Agent.plans is None:
+            print("Error: Plans have not been loaded.")
+            exit(1)
+
+        return Agent.plans[self._id][timestep]
 
     def get_initial_position(self) -> Position:
         """
@@ -87,7 +99,11 @@ class Agent:
         Returns:
         - Position: the initial position of the agent
         """
-        return Agent.plans.get(self._id)[0]
+        if Agent.plans is None:
+            print("Error: Plans have not been loaded.")
+            exit(1)
+
+        return Agent.plans[self._id][0]
 
     def __str__(self) -> str:
         """

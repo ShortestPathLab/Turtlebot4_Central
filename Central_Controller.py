@@ -27,8 +27,8 @@ class CentralController(BaseHTTPRequestHandler):
         Returns:
         - None
         """
-        query: str = urlparse(self.path).query
-        agent_id: List[int] = parse_qs(query).get('agent_id', None)
+        query = urlparse(self.path).query
+        agent_id = parse_qs(query).get("agent_id", None)
 
         if not agent_id:
             return
@@ -63,7 +63,7 @@ class CentralController(BaseHTTPRequestHandler):
         """
         content_length = int(self.headers["Content-Length"])
         post_data = self.rfile.read(content_length)
-        data: Dict = json.loads(post_data)
+        data = json.loads(post_data)
 
         # Update execution policy with incoming agent data.
         CentralController.execution_policy.update(data)
