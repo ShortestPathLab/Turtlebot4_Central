@@ -5,8 +5,9 @@ class Status(Enum):
     """
     Enum class representing the status of a task.
     """
+
     FAILED = 0
-    EXECUTING  = 1
+    EXECUTING = 1
     SUCCEEDED = 2
     WAITING = 3
     ABORTED = 4

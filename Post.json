@@ -1,5 +1,9 @@
 {
     "agent_id": "int",
-    "position": ["float", "float", "float"],
+    "position": [
+        "float",
+        "float",
+        "float"
+    ],
     "status": "string"
 }

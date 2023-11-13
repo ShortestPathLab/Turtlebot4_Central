@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+
 # Position Struct
 from typing import Tuple
 
@@ -24,6 +25,7 @@ class Position:
     to_tuple() -> Tuple
         Returns a tuple representation of the position in the format (x, y, theta).
     """
+
     x: float
     y: float
     theta: float

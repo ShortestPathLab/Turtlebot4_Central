@@ -4,7 +4,8 @@ from typing import Dict, List
 from urllib.parse import parse_qs, urlparse
 
 from Execution_Policy import ExecutionPolicy
-from Fully_Synchronised_Policy import FSP
+
+# from Fully_Synchronised_Policy import FSP
 from Minimum_Communication_Policy import MCP
 
 
@@ -13,8 +14,8 @@ class CentralController(BaseHTTPRequestHandler):
     A class representing the central controller for a multi-agent system.
 
     Attributes:
-    - execution_policy (ExecutionPolicy): An execution policy object that determines
-      the next position of an agent.
+    - execution_policy (ExecutionPolicy): An execution policy object
+    that determines the next position of an agent.
     """
 
     execution_policy: ExecutionPolicy = MCP("result.path", 2)
@@ -45,7 +46,9 @@ class CentralController(BaseHTTPRequestHandler):
         message["agent_id"] = agent_id
 
         # Fullfill agents request for position data
-        position, timestep = CentralController.execution_policy.get_next_position(agent_id)
+        position, timestep = CentralController.execution_policy.get_next_position(
+            agent_id
+        )
 
         message["timestep"] = timestep
         message["position"] = position.to_tuple()
@@ -58,7 +61,7 @@ class CentralController(BaseHTTPRequestHandler):
         Returns:
         - None
         """
-        content_length = int(self.headers['Content-Length'])
+        content_length = int(self.headers["Content-Length"])
         post_data = self.rfile.read(content_length)
         data: Dict = json.loads(post_data)
 
