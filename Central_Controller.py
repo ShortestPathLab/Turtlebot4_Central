@@ -45,9 +45,10 @@ class CentralController(BaseHTTPRequestHandler):
         message["agent_id"] = agent_id
 
         # Fullfill agents request for position data
-        position, timestep = CentralController.execution_policy.get_next_position(
-            agent_id
-        )
+        position, timestep = \
+            CentralController \
+            .execution_policy \
+            .get_next_position(agent_id)
 
         message["timestep"] = timestep
         message["position"] = position.to_tuple()

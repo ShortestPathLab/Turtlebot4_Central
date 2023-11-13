@@ -20,12 +20,13 @@ class FSP(ExecutionPolicy):
     Methods:
     --------
     get_next_position(index: int) -> Tuple[Position, int]:
-        Returns the next position of the agent at the given index and the current timestep.
+        Returns the next position of the agent at the given index
+        and the current timestep.
     update(data: Dict) -> None:
         Updates the position and status of the agent with the given data.
     """
 
-    def __init__(self, plan_file: str, num_of_agents: int):
+    def __init__(self, plan_file: str, num_agent: int):
         """
         Initializes the FSP object.
 
@@ -36,12 +37,13 @@ class FSP(ExecutionPolicy):
         num_of_agents : int
             The number of agents in the system.
         """
-        self.agents: List[Agent] = [Agent(plan_file) for _ in range(num_of_agents)]
-        self.current_timestep: int = 0
+        self.agents: List[Agent] = [Agent(plan_file) for _ in range(num_agent)]
+        self.timestep: int = 0
 
     def get_next_position(self, agent_id: int) -> Tuple[Position, int]:
         """
-        Returns the next position of the agent at the given index and the current timestep.
+        Returns the next position of the agent at the given index and the
+        current timestep.
 
         Parameters:
         -----------
@@ -51,15 +53,16 @@ class FSP(ExecutionPolicy):
         Returns:
         --------
         Tuple[Position, int]
-            A tuple containing the next position of the agent and the current timestep.
+            A tuple containing the next position of the agent and the
+            current timestep.
         """
         agent = self.agents[agent_id]
 
         if all(agent.status == Status.SUCCEEDED for agent in self.agents):
-            self.current_timestep += 1
+            self.timestep += 1
             agent.status = Status.EXECUTING
 
-        return agent.view_position(self.current_timestep), self.current_timestep
+        return agent.view_position(self.timestep), self.timestep
 
     def update(self, data: Dict) -> None:
         """

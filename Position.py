@@ -21,9 +21,11 @@ class Position:
     Methods:
     --------
     __repr__() -> str
-        Returns a string representation of the position in the format "x,y,theta".
+        Returns a string representation of the position in the format
+        "x,y,theta".
     to_tuple() -> Tuple
-        Returns a tuple representation of the position in the format (x, y, theta).
+        Returns a tuple representation of the position in the format
+        (x, y, theta).
     """
 
     x: float
@@ -38,13 +40,15 @@ class Position:
         Returns a tuple representation of the Position object.
 
         Returns:
-        Tuple: A tuple containing the x, y, and theta values of the Position object.
+        Tuple: A tuple containing the x, y, and theta values of the Position
+        object.
         """
         return (self.x, self.y, self.theta)
 
     def __hash__(self) -> int:
         """
-        Returns a unique hash value for the Position object based on its x and y coordinates.
+        Returns a unique hash value for the Position object based on its x and
+        y coordinates.
 
         Returns:
         int: A unique hash value for the Position object.

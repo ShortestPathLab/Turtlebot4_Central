@@ -102,7 +102,7 @@ class ScheduleTable:
                 break
             self.delete_entry(position, agent_id, timestep)
 
-    def delete_entry(self, position: Position, agent_id: int, timestep: int) -> None:
+    def delete_entry(self, position: Position, agent_id: int, timestep: int):
         """
         Deletes an entry from the schedule table.
 

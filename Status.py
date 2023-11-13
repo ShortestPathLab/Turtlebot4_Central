@@ -24,7 +24,8 @@ class Status(Enum):
             The enum value corresponding to the given string.
 
         Raises:
-            ValueError: If the given string does not correspond to any enum value.
+            ValueError: If the given string does not correspond to any enum
+            value.
         """
         for k, v in cls.__members__.items():
             if k.lower() == string.lower():

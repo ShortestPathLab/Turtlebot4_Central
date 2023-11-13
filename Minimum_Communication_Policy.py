@@ -9,7 +9,8 @@ from Status import Status
 
 class MCP(ExecutionPolicy):
     """
-    A class representing the Minimum Communication Policy for a Central Controller.
+    A class representing the Minimum Communication Policy for a Central
+    Controller.
 
     Attributes:
     -----------
@@ -26,7 +27,7 @@ class MCP(ExecutionPolicy):
         Updates the agent data.
     """
 
-    def __init__(self, plan_file: str, num_of_agents: int) -> None:
+    def __init__(self, plan_file: str, num_agent: int) -> None:
         """
         Initializes the MCP class.
 
@@ -37,7 +38,7 @@ class MCP(ExecutionPolicy):
         num_of_agents : int
             The number of agents.
         """
-        self.agents: List[Agent] = [Agent(plan_file) for _ in range(num_of_agents)]
+        self.agents: List[Agent] = [Agent(plan_file) for _ in range(num_agent)]
 
         if Agent.plans is None:
             print("Error: Plans have not been loaded.")
@@ -57,7 +58,8 @@ class MCP(ExecutionPolicy):
         Returns:
         --------
         Tuple[Position, int]
-            A tuple containing the next position and timestep for the given agent.
+            A tuple containing the next position and timestep for the given
+            agent.
         """
 
         agent: Agent = self.agents[agent_id]
@@ -105,6 +107,7 @@ class MCP(ExecutionPolicy):
 
         if agent.status == Status.SUCCEEDED:
             agent.position = agent.view_position(agent.timestep)
-            self.schedule_table.remove_path(agent_id, agent.get_plan(), agent.timestep)
+            plan = agent.get_plan()
+            self.schedule_table.remove_path(agent_id, plan, agent.timestep)
 
         print(agent)
