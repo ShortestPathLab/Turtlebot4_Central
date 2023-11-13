@@ -28,7 +28,7 @@ class CentralController(BaseHTTPRequestHandler):
         - None
         """
         query: str = urlparse(self.path).query
-        agent_id: List[int] = parse_qs(query).get("agent_id", None)
+        agent_id: List[int] = parse_qs(query).get('agent_id', None)
 
         if not agent_id:
             return
