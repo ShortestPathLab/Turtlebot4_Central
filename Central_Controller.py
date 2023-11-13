@@ -1,6 +1,5 @@
 import json
 from http.server import BaseHTTPRequestHandler
-from typing import Dict, List
 from urllib.parse import parse_qs, urlparse
 
 from Execution_Policy import ExecutionPolicy

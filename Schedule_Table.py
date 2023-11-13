@@ -1,4 +1,4 @@
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 from Grid_Constraints import GridConstraint
 from Position import Position
