@@ -1,7 +1,8 @@
 from http.server import HTTPServer
 
 from Central_Controller import CentralController
-from Minimum_Communication_Policy import MCP
+
+# from Minimum_Communication_Policy import MCP
 
 if __name__ == "__main__":
     host_name: str = "0.0.0.0"
