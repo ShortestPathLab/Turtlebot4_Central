@@ -98,4 +98,3 @@ class Agent:
         - str: a string representation of the agent
         """
         return f"ID: {self._id}, Status: {self.status}, Position: {self.position}, Timestep: {self.timestep}"
-

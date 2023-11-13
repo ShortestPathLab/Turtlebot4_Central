@@ -66,11 +66,10 @@ class MCP(ExecutionPolicy):
 
 
         timestep = agent.timestep
-        position = agent.position
-
+        position = agent.view_position(timestep)
         while timestep+1 < len(agent.get_plan()):
 
-            next_timestep = timestep+1
+            next_timestep = timestep + 1
             next_position = agent.view_position(next_timestep)
 
             # Check if we are scheduled at the next position
@@ -78,13 +77,12 @@ class MCP(ExecutionPolicy):
                 break
 
             # If we are next scheduled we an go to next position.
-            timestep, position = next_timestep, next_position
+            timestep = next_timestep
+            position = next_position
 
             # If the next position requires a turn we stay where we are.
-            if agent.view_position(agent.timestep).theta != next_position.theta:
+            if agent.view_position(agent.timestep).theta != position.theta:
                 break
-
-            timestep+=1
 
         return position, timestep
 
