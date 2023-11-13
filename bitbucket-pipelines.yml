@@ -5,17 +5,25 @@
 
 image: python:3.11
 
+definitions:
+  steps:
+    - step: &lint-code
+        name: Lint Code with Flake8
+        script:
+          - pip install flake8
+          - flake8 . --extend-exclude=dist,build --show-source --statistics --max-line-length 80
+
+    - step: &type-check
+        name: Type Check with MyPy
+        script:
+          - pip install mypy
+          - mypy .
+
 pipelines:
-  default:
-    - parallel:
-      - step:
-          name: Lint code
-          script:
-            # Enforce style consistency across Python projects https://flake8.pycqa.org
-            - pip install flake8
-            - flake8 . --extend-exclude=dist,build --show-source --statistics --max-line-length 80            
-      - step:
-          name: MyPy Type Checking
-          script:
-            - pip install mypy
-            - mypy .
+  branches:
+    main:
+      - <<: *lint-code
+      - <<: *type-check
+    development:
+      - <<: *lint-code
+      - <<: *type-check
