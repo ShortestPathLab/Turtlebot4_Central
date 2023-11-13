@@ -1,12 +1,12 @@
 import json
 from http.server import BaseHTTPRequestHandler
-
 from typing import Dict, List
-from urllib import parse as urlparse
+from urllib.parse import parse_qs, urlparse
 
 from Execution_Policy import ExecutionPolicy
 from Fully_Synchronised_Policy import FSP
 from Minimum_Communication_Policy import MCP
+
 
 class CentralController(BaseHTTPRequestHandler):
     """
@@ -26,7 +26,8 @@ class CentralController(BaseHTTPRequestHandler):
         Returns:
         - None
         """
-        agent_id: List[int] = urlparse.parse_qs(urlparse.urlparse(self.path).query).get('agent_id', None)
+        query: str = urlparse(self.path).query
+        agent_id: List[int] = parse_qs(query).get('agent_id', None)
 
         if not agent_id:
             return

@@ -1,4 +1,3 @@
-
 from typing import Dict, List
 
 from File_Handler import load_paths
@@ -17,9 +16,8 @@ class Agent:
     - status (Status): status of the agent
     """
     # Class Attribute containing plans of all agents
-    plans: Dict[int ,List[Position]] = None
+    plans: Dict[int, List[Position]] = None
     num_agents: int = 0
-
 
     def __init__(self, filename: str):
         """
@@ -97,4 +95,7 @@ class Agent:
         Returns:
         - str: a string representation of the agent
         """
-        return f"ID: {self._id}, Status: {self.status}, Position: {self.position}, Timestep: {self.timestep}"
+        return f"ID: {self._id}, \
+            Status: {self.status}, \
+            Position: {self.position}, \
+            Timestep: {self.timestep}"
