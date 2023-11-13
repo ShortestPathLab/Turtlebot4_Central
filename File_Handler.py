@@ -12,10 +12,10 @@ def load_paths(path_file: str = None) -> Dict[int, List[Position]]:
         path_file (str): The path to the file containing the paths.
 
     Returns:
-        A dictionary of paths for each agent, where the key is the 
+        A dictionary of paths for each agent, where the key is the
         agent index and the value is a list of Positions.
     """
-    print("Loading paths from "+str(path_file), end="... ")
+    print("Loading paths from " + str(path_file), end="... ")
     if not os.path.exists(path_file):
         print("\nNo path file is found!")
         return

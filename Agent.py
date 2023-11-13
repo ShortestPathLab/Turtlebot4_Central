@@ -15,6 +15,7 @@ class Agent:
     - _id (int): id corresponding to agent's position in plans
     - status (Status): status of the agent
     """
+
     # Class Attribute containing plans of all agents
     plans: Dict[int, List[Position]] = None
     num_agents: int = 0

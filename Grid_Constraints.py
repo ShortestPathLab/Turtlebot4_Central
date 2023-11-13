@@ -1,5 +1,3 @@
-
-
 class GridConstraint:
     """
     A class representing a constraint on the grid for a single agent.

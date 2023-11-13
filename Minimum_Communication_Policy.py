@@ -37,9 +37,8 @@ class MCP(ExecutionPolicy):
         num_of_agents : int
             The number of agents.
         """
-        self.agents: List[Agent]  = [Agent(plan_file) for _ in range(num_of_agents)]
+        self.agents: List[Agent] = [Agent(plan_file) for _ in range(num_of_agents)]
         self.schedule_table: ScheduleTable = ScheduleTable(Agent.plans)
-
 
     def get_next_position(self, agent_id) -> Tuple[Position, int]:
         """
@@ -64,11 +63,9 @@ class MCP(ExecutionPolicy):
             timestep = 0
             return position, timestep
 
-
         timestep = agent.timestep
         position = agent.view_position(timestep)
-        while timestep+1 < len(agent.get_plan()):
-
+        while timestep + 1 < len(agent.get_plan()):
             next_timestep = timestep + 1
             next_position = agent.view_position(next_timestep)
 
@@ -85,7 +82,6 @@ class MCP(ExecutionPolicy):
                 break
 
         return position, timestep
-
 
     def update(self, data) -> None:
         """
