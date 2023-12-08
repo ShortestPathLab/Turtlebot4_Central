@@ -33,7 +33,7 @@ class Position:
     theta: float
 
     def __repr__(self) -> str:
-        return f"{self.x},{self.y},{self.theta}"
+        return f"({self.x},{self.y},{self.theta})"
 
     def to_tuple(self) -> Tuple:
         """

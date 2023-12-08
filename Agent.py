@@ -116,3 +116,30 @@ class Agent:
             Status: {self.status}, \
             Position: {self.position}, \
             Timestep: {self.timestep}"
+
+class OnlineAgent(Agent):
+    """
+    Class representing an agent in a multi-agent system, where the plan is extended during runtime
+    This means the plans are initialised as an empty list
+    Attributes:
+    - position (Position): current position of the agent
+    - timestep (int): current timestep of the agent
+    - _id (int): id corresponding to agent's position in plans
+    - status (Status): status of the agent
+    """
+    def __init__(self):
+        """
+        Initializes an Agent object.
+
+        Args:
+        - filename (str): name of the file containing the agent's plan
+        """
+        self.position: Position | None = None
+        self.timestep: int = 0
+        self._id: int = Agent.num_agents
+        self.status: Status = Status.WAITING
+        Agent.num_agents += 1
+
+        if Agent.plans is None:
+            Agent.plans = dict()
+    
