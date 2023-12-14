@@ -89,7 +89,8 @@ class Agent:
         if Agent.plans is None:
             print("Error: Plans have not been loaded.")
             exit(1)
-
+        if timestep >= len(Agent.plans[self._id]): # Plan is finished
+            return Agent.plans[self._id][-1] # Show at end of plan if finished plan (lifelong model)
         return Agent.plans[self._id][timestep]
 
     def get_initial_position(self) -> Position:
@@ -127,7 +128,7 @@ class OnlineAgent(Agent):
     - _id (int): id corresponding to agent's position in plans
     - status (Status): status of the agent
     """
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initializes an Agent object.
 

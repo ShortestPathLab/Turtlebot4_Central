@@ -116,7 +116,7 @@ class OnlineFSP(OnlineExecutionPolicy):
         Updates the position and status of the agent with the given data.
     """
         
-    def __init__(self, num_agents):
+    def __init__(self, num_agents: int):
         """
         Initializes the FSP object.
 
@@ -128,7 +128,10 @@ class OnlineFSP(OnlineExecutionPolicy):
 
         self.agents: List[OnlineAgent] = [OnlineAgent() for _ in range(num_agents)]
         for agent in self.agents:
-            agent.plans[agent._id] = []
+            if agent.plans is not None:
+                agent.plans.setdefault(agent._id, [])
+            else:
+                raise ValueError("Plans were not intialised")
         self.timestep: int = 0
     
     def extend_plans(self, extensions: List[Tuple[int, List[Tuple[Position, int]]]]) -> None:
@@ -142,11 +145,14 @@ class OnlineFSP(OnlineExecutionPolicy):
         """
         for (agent_id, extension) in extensions:
             agent = self.agents[agent_id]
-            print(agent.plans)
+            # print(agent.plans)
             for (next_pos, timestep) in extension:
-                if len(agent.plans) < timestep:
-                    raise ValueError("Trying to change existing plan or create undefined timestep") 
-                self.agents[0].plans[agent_id].append(next_pos)
+                if agent.plans is not None:
+                    if len(agent.plans[agent_id]) < timestep -  1: # This is fine?
+                        raise ValueError("Trying to change existing plan or create undefined timestep") 
+                    agent.plans[agent_id].append(next_pos)
+                else:
+                    raise ValueError("Plans were not initialised")
         print(agent.plans)
 
     def get_agent_locations(self) -> List[Tuple[Position, int]]:
