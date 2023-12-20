@@ -1,5 +1,4 @@
-# from math import sin, cos
-import numpy as np
+import numpy as np # type: ignore
 
 def rotate(x, y, radians):
     return (x*np.cos(radians) - y*np.sin(radians), x*np.sin(radians) + y*np.cos(radians))
