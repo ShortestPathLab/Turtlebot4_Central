@@ -143,4 +143,3 @@ class OnlineAgent(Agent):
 
         if Agent.plans is None:
             Agent.plans = dict()
-    

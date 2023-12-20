@@ -5,4 +5,4 @@ with open(f, 'rb') as pgmf:
     plt.imshow(im)
     plt.show()
 
-    # Do something, rasterise for .map file 
+    # Do something, rasterise for .map file

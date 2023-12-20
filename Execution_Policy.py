@@ -81,7 +81,8 @@ class OnlineExecutionPolicy(abc.ABC):
 
         Args:
             extensions:
-                List[Tuple[int, List[Tuple[Position, int]]]]: A list containing pairs of agent_id and plan extensions,
-                                                                where plan extensions are tuples of Position and timestep to reach it
+                List[Tuple[int, List[Tuple[Position, int]]]]:
+                    A list containing pairs of agent_id and plan extensions,
+                    where plan extensions are tuples of Position and timestep to reach it
         """
         raise NotImplementedError

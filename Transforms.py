@@ -1,4 +1,4 @@
-from math import sin, cos
+# from math import sin, cos
 import numpy as np
 
 def rotate(x, y, radians):
@@ -7,4 +7,3 @@ def rotate(x, y, radians):
 if __name__ == "__main__":
     print(rotate(0.5, 0.5, 3.0815))
     # (-15.4613, 1.29542)
-   

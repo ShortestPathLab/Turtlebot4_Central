@@ -115,7 +115,7 @@ class OnlineFSP(OnlineExecutionPolicy):
     update(data: Dict) -> None:
         Updates the position and status of the agent with the given data.
     """
-        
+
     def __init__(self, num_agents: int):
         """
         Initializes the FSP object.
@@ -133,15 +133,16 @@ class OnlineFSP(OnlineExecutionPolicy):
             else:
                 raise ValueError("Plans were not intialised")
         self.timestep: int = 0
-    
+
     def extend_plans(self, extensions: List[Tuple[int, List[Tuple[Position, int]]]]) -> None:
         """
         Extend the existing plans for agents
 
         Args:
             extensions:
-                List[Tuple[int, List[Tuple[Position, int]]]]: A list containing pairs of agent_id and plan extensions,
-                                                                where plan extensions are tuples of Position and timestep to reach it  
+                List[Tuple[int, List[Tuple[Position, int]]]]:
+                    A list containing pairs of agent_id and plan extensions,
+                    where plan extensions are tuples of Position and timestep to reach it
         """
         for (agent_id, extension) in extensions:
             agent = self.agents[agent_id]
@@ -149,7 +150,7 @@ class OnlineFSP(OnlineExecutionPolicy):
             for (next_pos, timestep) in extension:
                 if agent.plans is not None:
                     if len(agent.plans[agent_id]) < timestep -  1: # This is fine?
-                        raise ValueError("Trying to change existing plan or create undefined timestep") 
+                        raise ValueError("Trying to change existing plan or create undefined timestep")
                     agent.plans[agent_id].append(next_pos)
                 else:
                     raise ValueError("Plans were not initialised")
@@ -157,8 +158,9 @@ class OnlineFSP(OnlineExecutionPolicy):
 
     def get_agent_locations(self) -> List[Tuple[Position, int]]:
         """
-        Method to get the final positions of agents, this policy assumes agents will complete their plans fully synchronised
-        so it returns the last planned location of each agent
+        Method to get the final positions of agents;
+            this policy assumes agents will complete their plans fully synchronised
+            so it returns the last planned location of each agent
 
         Returns:
             List[Tuple[Position, int]]: A list containing pairs of Position and the id of the agent there
@@ -168,7 +170,7 @@ class OnlineFSP(OnlineExecutionPolicy):
         for agent in self.agents:
             agent_positions.append((agent.get_plan()[-1], agent._id))
         return agent_positions
-    
+
     def get_next_position(self, agent_id: int) -> Tuple[Position, int]:
         """
         Returns the next position of the agent at the given index and the

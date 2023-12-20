@@ -3,8 +3,8 @@ from http.server import BaseHTTPRequestHandler
 from urllib.parse import parse_qs, urlparse
 
 from Execution_Policy import ExecutionPolicy, OnlineExecutionPolicy
-from Fully_Synchronised_Policy import FSP, OnlineFSP
-from Minimum_Communication_Policy import MCP
+from Fully_Synchronised_Policy import FSP, OnlineFSP # noqa: F401
+from Minimum_Communication_Policy import MCP # noqa: F401
 from Position import Position
 
 
