@@ -4,6 +4,7 @@ definitions:
   steps:
     -parallel:
       - step: &lint-code
+          fail-fast: false
           name: Lint Code with Flake8
           script:
             - pip install ruff
