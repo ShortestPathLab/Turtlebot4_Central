@@ -2,7 +2,7 @@ image: python:3.11
 
 definitions:
   steps:
-    -parallel
+    -parallel:
       - step: &lint-code
           name: Lint Code with Flake8
           script:
