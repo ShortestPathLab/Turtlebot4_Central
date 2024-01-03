@@ -1,7 +1,9 @@
-from typing import Dict, List
+from typing import Dict, List, Tuple
+from queue import PriorityQueue
 
 from Grid_Constraints import GridConstraint
 from Position import Position
+
 
 
 class ScheduleTable:
@@ -125,3 +127,118 @@ class ScheduleTable:
         if constraint is not None:
             assert constraint.agent_id == agent_id
             self.path_table[position][timestep] = None
+
+class OnlineSchedule:
+    """
+    A class that represents a schedule table for agents.
+    Using a priority queue with arrival timestep as priority.
+
+    Attributes:
+    -----------
+    path_table : Dict[Tuple[int, int], Queue[GridConstraint]]
+        A dictionary that maps a tuple of (x, y) coordinates to a
+        queue of GridConstraint objects describing the order agents pass through the location.
+    """
+    def __init__(self, num_agents: int) -> None:
+        """
+        Initializes a new instance of the ScheduleTable class.
+
+        Parameters:
+        -----------
+        num_agents: The maximum number of active agents
+        """
+        self.path_table: Dict[Position, PriorityQueue[GridConstraint]] = {}
+        self.num_agents = num_agents
+
+    def update_plan(self, extension: List[Tuple[Position, int]], agent_id: int):
+        """
+        Extends or create a path in the schedule table, enforcing the order??.
+
+        Parameters:
+        -----------
+        agent_id : int
+            The ID of the agent.
+        path : List[Position]
+            A list of positions that the agent will visit.
+        """
+        for position, timestep in extension:
+            if position not in self.path_table:
+                self.path_table[position] = PriorityQueue(self.num_agents)
+            constraint = GridConstraint()
+            constraint.agent_id = agent_id
+            constraint.vertex = True
+            constraint.edge = position.theta
+            constraint.timestep_ = timestep
+            self.path_table[position].put(constraint, timestep)
+
+    def scheduled(self, position: Position, agent_id: int) -> bool:
+        """
+        Checks if a position is scheduled for a given agent.
+
+        Parameters:
+        -----------
+        position : Position
+            The position to check.
+        agent_id : int
+            The ID of the agent.
+
+        Returns:
+        --------
+        bool
+            True if the position is scheduled for the given agent,
+            False otherwise.
+
+        Requires:
+        ---------
+        The agent only checks if it is scheduled enxt along a path that has been inserted into the schedule.
+        """
+        schedule = self.path_table.get(position)
+        if not schedule:
+            raise ValueError("Position has no schedules at all, not planned to be traversed")
+        # Unpleasant internal attribute access because PriorityQueue does not provide a peek method.
+        # Cannot remove the scheduled action until the action is completed,
+        # otherwise we do not properly prevent collisions
+        if schedule.queue[0].agent_id == agent_id:
+            return True
+        return False
+
+    def delete_entry(self, position: Position, agent_id: int, timestep: int):
+        """
+        Deletes an entry from the schedule table.
+
+        Parameters:
+        -----------
+        position : Position
+            The position to delete.
+        agent_id : int
+            The ID of the agent.
+        timestep : int
+            The timestep of the entry to delete.
+        """
+        constraints = self.path_table.get(position)
+
+        if constraints is None or not constraints:
+            return
+
+        constraint = constraints.get()
+
+        if constraint is not None:
+            assert constraint.agent_id == agent_id
+            assert constraint.timestep_ == timestep
+
+    def remove_path(
+        self, agent_id: int, path: List[Tuple[int, Position]]) -> None:
+        """
+        Removes a path segment from the schedule table.
+
+        Parameters:
+        -----------
+        agent_id : int
+            The ID of the agent.
+        path : List[Tuple[int, Position]]
+            The list of positions the agent has visited since the last update of its location,
+            with the planned timesteps it has completed
+        """
+        ## Want to also start from the last confirmed timestep
+        for timestep, position in path:
+            self.delete_entry(position, agent_id, timestep)
