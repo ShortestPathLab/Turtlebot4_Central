@@ -170,9 +170,10 @@ class OnlineMCP(OnlineExecutionPolicy):
             agent.position = agent.view_position(agent.timestep)
             plan = agent.get_plan()
             ## Test whether this has off by one errors
+            print(type(prev_timestep), prev_timestep)
             self.schedule_table.remove_path(
                                             agent_id,
-                                            enumerate(prev_timestep, plan[prev_timestep:agent.timestep])
+                                            enumerate(plan[prev_timestep:agent.timestep], prev_timestep)
                                             )
 
         print(agent)
@@ -185,7 +186,7 @@ class OnlineMCP(OnlineExecutionPolicy):
             List[Tuple[Position, int]]: A list containing pairs of Position and the id of the agent there
         """
         agent_positions = []
-
+        print("Grabbing end of plans")
         for agent in self.agents:
             agent_positions.append((agent.get_plan()[-1], agent._id))
         return agent_positions
@@ -200,22 +201,27 @@ class OnlineMCP(OnlineExecutionPolicy):
                     A list containing pairs of agent_id and plan extensions,
                     where plan extensions are tuples of Position and timestep to reach it
         """
+        print("Start OnlineMCP extend plans")
         for (agent_id, extension) in extensions:
             agent = self.agents[agent_id]
             # print(agent.plans)
 
             ### NOTE: The following code describes what part of the extension is
-            ###        committed to by the execution policy
-            for (next_pos, timestep) in extension:
+            ###        committed for the execution policy
+            for (next_pos, timestep) in extension: # Commit to the entire extension
                 if agent.plans is not None:
                     if len(agent.plans[agent_id]) < timestep -  1: # This is fine?
                         raise ValueError("Trying to change existing plan or create undefined timestep")
                     agent.plans[agent_id].append(next_pos)
                 else:
                     raise ValueError("Plans were not initialised")
-
+            print("Sch")
             self.schedule_table.update_plan(extension, agent_id)
 
         print(agent.plans)
 
 
+if __name__ == "__main__":
+    mcp = OnlineMCP(2)
+    plan = [(0, [(Position(0,0,0), 0)]), (1, [(Position(0,1,180), 0)])]
+    mcp.extend_plans(plan)

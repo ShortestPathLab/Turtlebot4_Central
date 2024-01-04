@@ -4,7 +4,7 @@ from urllib.parse import parse_qs, urlparse
 
 from Execution_Policy import ExecutionPolicy, OnlineExecutionPolicy
 from Fully_Synchronised_Policy import FSP, OnlineFSP # noqa: F401
-from Minimum_Communication_Policy import MCP # noqa: F401
+from Minimum_Communication_Policy import MCP, OnlineMCP # noqa: F401
 from Position import Position
 
 
@@ -17,7 +17,7 @@ class CentralController(BaseHTTPRequestHandler):
     that determines the next position of an agent.
     """
 
-    execution_policy: ExecutionPolicy | OnlineExecutionPolicy = OnlineFSP(2)
+    execution_policy: ExecutionPolicy | OnlineExecutionPolicy = OnlineMCP(2)
 
     def do_GET(self):
         """
@@ -59,7 +59,6 @@ class CentralController(BaseHTTPRequestHandler):
                 self.wfile.write(bytes(json.dumps(message), "utf-8"))
             case "/get_locations":
                 locations = CentralController.execution_policy.get_agent_locations()
-
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json")
                 self.end_headers()
@@ -89,14 +88,16 @@ class CentralController(BaseHTTPRequestHandler):
         Returns:
         - None
         """
-
+        print("Start Post response")
         content_length = int(self.headers["Content-Length"])
         post_data = self.rfile.read(content_length)
         data = json.loads(post_data)
         match urlparse(self.path).path:
             case "/":
+                print("Do robot post")
                 CentralController.execution_policy.update(data)
             case "/extend_path":
+                print("Do planner post")
                 extensions = []
                 for agent_id, state in enumerate(
                     data["plans"]
@@ -112,11 +113,12 @@ class CentralController(BaseHTTPRequestHandler):
                             ],
                         )
                     )
+                print(extensions)
                 CentralController.execution_policy.extend_plans(extensions)
             case _:
                 print("Unexpected path {self.path}")
         # Update execution policy with incoming agent data.
-
+        print("Send post response")
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
         self.end_headers()

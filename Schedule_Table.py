@@ -1,5 +1,5 @@
 from typing import Dict, List, Tuple
-from queue import PriorityQueue
+from collections import deque
 
 from Grid_Constraints import GridConstraint
 from Position import Position
@@ -147,7 +147,7 @@ class OnlineSchedule:
         -----------
         num_agents: The maximum number of active agents
         """
-        self.path_table: Dict[Position, PriorityQueue[GridConstraint]] = {}
+        self.path_table: Dict[Position, deque[GridConstraint]] = {}
         self.num_agents = num_agents
 
     def update_plan(self, extension: List[Tuple[Position, int]], agent_id: int):
@@ -163,13 +163,15 @@ class OnlineSchedule:
         """
         for position, timestep in extension:
             if position not in self.path_table:
-                self.path_table[position] = PriorityQueue(self.num_agents)
+                self.path_table[position] = deque()
             constraint = GridConstraint()
             constraint.agent_id = agent_id
             constraint.vertex = True
             constraint.edge = position.theta
             constraint.timestep_ = timestep
-            self.path_table[position].put(constraint, timestep)
+
+            self.path_table[position].append(constraint)
+
 
     def scheduled(self, position: Position, agent_id: int) -> bool:
         """
@@ -195,10 +197,10 @@ class OnlineSchedule:
         schedule = self.path_table.get(position)
         if not schedule:
             raise ValueError("Position has no schedules at all, not planned to be traversed")
-        # Unpleasant internal attribute access because PriorityQueue does not provide a peek method.
+        # Unpleasant internal attribute access because Queue does not provide a peek method.
         # Cannot remove the scheduled action until the action is completed,
         # otherwise we do not properly prevent collisions
-        if schedule.queue[0].agent_id == agent_id:
+        if schedule[0].agent_id == agent_id:
             return True
         return False
 
@@ -220,7 +222,7 @@ class OnlineSchedule:
         if constraints is None or not constraints:
             return
 
-        constraint = constraints.get()
+        constraint = constraints.popleft()
 
         if constraint is not None:
             assert constraint.agent_id == agent_id
@@ -241,4 +243,4 @@ class OnlineSchedule:
         """
         ## Want to also start from the last confirmed timestep
         for timestep, position in path:
-            self.delete_entry(position, agent_id, timestep)
+            print( "Deleted this, ", self.delete_entry(position, agent_id, timestep))
