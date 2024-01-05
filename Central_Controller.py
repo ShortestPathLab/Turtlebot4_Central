@@ -65,7 +65,8 @@ class CentralController(BaseHTTPRequestHandler):
 
                 message = {}
 
-                # Bad conversions for now
+                # Ideally this is in row-column format with only positive values for the planner
+                # Right now the planner side converts row-column to pos-x, neg-y
                 message["locations"] = [
                     {
                         "x": location.x,
@@ -88,16 +89,13 @@ class CentralController(BaseHTTPRequestHandler):
         Returns:
         - None
         """
-        print("Start Post response")
         content_length = int(self.headers["Content-Length"])
         post_data = self.rfile.read(content_length)
         data = json.loads(post_data)
         match urlparse(self.path).path:
             case "/":
-                print("Do robot post")
                 CentralController.execution_policy.update(data)
             case "/extend_path":
-                print("Do planner post")
                 extensions = []
                 for agent_id, state in enumerate(
                     data["plans"]
@@ -113,12 +111,10 @@ class CentralController(BaseHTTPRequestHandler):
                             ],
                         )
                     )
-                print(extensions)
                 CentralController.execution_policy.extend_plans(extensions)
             case _:
                 print("Unexpected path {self.path}")
         # Update execution policy with incoming agent data.
-        print("Send post response")
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
         self.end_headers()

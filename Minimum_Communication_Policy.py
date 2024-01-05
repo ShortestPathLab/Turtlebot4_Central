@@ -1,4 +1,4 @@
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 
 from Agent import Agent, OnlineAgent
 from Execution_Policy import ExecutionPolicy, OnlineExecutionPolicy
@@ -150,7 +150,7 @@ class OnlineMCP(OnlineExecutionPolicy):
 
         return position, timestep
 
-    def update(self, data: Dict) -> None:
+    def update(self, data) -> None:
         """
         Updates the agent data.
 
@@ -170,10 +170,9 @@ class OnlineMCP(OnlineExecutionPolicy):
             agent.position = agent.view_position(agent.timestep)
             plan = agent.get_plan()
             ## Test whether this has off by one errors
-            print(type(prev_timestep), prev_timestep)
             self.schedule_table.remove_path(
                                             agent_id,
-                                            enumerate(plan[prev_timestep:agent.timestep], prev_timestep)
+                                            [*enumerate(plan[prev_timestep:agent.timestep], prev_timestep)]
                                             )
 
         print(agent)
@@ -186,7 +185,6 @@ class OnlineMCP(OnlineExecutionPolicy):
             List[Tuple[Position, int]]: A list containing pairs of Position and the id of the agent there
         """
         agent_positions = []
-        print("Grabbing end of plans")
         for agent in self.agents:
             agent_positions.append((agent.get_plan()[-1], agent._id))
         return agent_positions
@@ -201,7 +199,6 @@ class OnlineMCP(OnlineExecutionPolicy):
                     A list containing pairs of agent_id and plan extensions,
                     where plan extensions are tuples of Position and timestep to reach it
         """
-        print("Start OnlineMCP extend plans")
         for (agent_id, extension) in extensions:
             agent = self.agents[agent_id]
             # print(agent.plans)
@@ -215,7 +212,6 @@ class OnlineMCP(OnlineExecutionPolicy):
                     agent.plans[agent_id].append(next_pos)
                 else:
                     raise ValueError("Plans were not initialised")
-            print("Sch")
             self.schedule_table.update_plan(extension, agent_id)
 
         print(agent.plans)
