@@ -54,3 +54,15 @@ class Position:
         int: A unique hash value for the Position object.
         """
         return hash((self.x, self.y))
+
+    def location(self) -> Tuple[int, int]:
+        """
+        Returns a tuple representation of the location of the Position object.
+
+        Returns:
+        Tuple: A tuple containing the x and y values of the Position
+        object.
+        """
+        assert self.x.is_integer()
+        assert self.y.is_integer()
+        return (int(self.x), int(self.y))

@@ -219,5 +219,12 @@ class OnlineMCP(OnlineExecutionPolicy):
 
 if __name__ == "__main__":
     mcp = OnlineMCP(2)
-    plan = [(0, [(Position(0,0,0), 0)]), (1, [(Position(0,1,180), 0)])]
+    plan = [(0, [(Position(0,0,0), 0)]), (0, [(Position(0,1,180), 1)]), (1, [(Position(0,1,0), 0)]), (1, [(Position(1,1,180), 1)])] # noqa: E501
     mcp.extend_plans(plan)
+    for q in mcp.schedule_table.path_table:
+        print(q)
+    mcp.schedule_table.remove_path(0,
+                                   [*enumerate(map(lambda x: x[1][0][0],plan[0:2]))])
+    print("After removing")
+    for b in mcp.schedule_table.path_table.items():
+        print(b)

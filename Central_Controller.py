@@ -17,7 +17,7 @@ class CentralController(BaseHTTPRequestHandler):
     that determines the next position of an agent.
     """
 
-    execution_policy: ExecutionPolicy | OnlineExecutionPolicy = OnlineMCP(2)
+    execution_policy: ExecutionPolicy | OnlineExecutionPolicy = OnlineMCP(1)
 
     def do_GET(self):
         """
