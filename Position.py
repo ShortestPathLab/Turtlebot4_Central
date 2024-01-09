@@ -63,6 +63,6 @@ class Position:
         Tuple: A tuple containing the x and y values of the Position
         object.
         """
-        assert self.x.is_integer()
-        assert self.y.is_integer()
+        assert (isinstance(self.x, float) and self.x.is_integer()) or isinstance(self.x, int)
+        assert (isinstance(self.y, float) and self.y.is_integer()) or isinstance(self.y, int)
         return (int(self.x), int(self.y))

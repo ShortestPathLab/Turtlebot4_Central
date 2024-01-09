@@ -1,10 +1,45 @@
 from typing import Dict, List, Tuple
-from collections import deque
+from collections import deque, UserDict
 
 from Grid_Constraints import GridConstraint
 from Position import Position
 
+class PathReservation(UserDict):
+    """A custom dict override to insert Position(x,y,theta) with keys being equal if x and y are equal"""
+    def get(self, key):
+        key = self.PositionToLocation(key)
+        if key in self.data:
+            return self.data[key]
+        if hasattr(self.__class__, "__missing__"):
+            return self.__class__.__missing__(self, key)
+        raise KeyError(key)
 
+    def __setitem__(self, key, item):
+        key = self.PositionToLocation(key)
+        self.data[key] = item
+
+    def __delitem__(self, key):
+        key = self.PositionToLocation(key)
+        del self.data[key]
+
+    def __getitem__(self, key):
+        key = self.PositionToLocation(key)
+        if key in self.data:
+            return self.data[key]
+        if hasattr(self.__class__, "__missing__"):
+            return self.__class__.__missing__(self, key)
+        raise KeyError(key)
+
+    def __contains__(self, key):
+        key = self.PositionToLocation(key)
+        return key in self.data
+
+    def PositionToLocation(self, key):
+        if isinstance(key, Position):
+            return key.location()
+        else:
+            assert isinstance(key, tuple) and len(key) == 2, f"Invalid key? {key}"
+            return key
 
 class ScheduleTable:
     """
@@ -27,7 +62,7 @@ class ScheduleTable:
             A dictionary that maps an agent ID to a list of positions
             that the agent will visit.
         """
-        self.path_table: Dict[Tuple[int, int], List[GridConstraint | None]] = {}
+        self.path_table: PathReservation[Tuple[int, int], List[GridConstraint | None]] = PathReservation()
 
         for agent_id, agent_plan in agent_plans.items():
             self.add_path(agent_id, agent_plan)
@@ -45,13 +80,13 @@ class ScheduleTable:
         """
         for timestep, position in enumerate(path):
             if position not in self.path_table:
-                self.path_table[position.location()] = []
+                self.path_table[position] = []
 
-            if len(self.path_table[position.location()]) <= timestep:
-                difference = timestep - len(self.path_table[position.location()]) + 1
-                self.path_table[position.location()].extend([None] * difference)
+            if len(self.path_table[position]) <= timestep:
+                difference = timestep - len(self.path_table[position]) + 1
+                self.path_table[position].extend([None] * difference)
 
-            assert self.path_table[position.location()][timestep] is None
+            assert self.path_table[position][timestep] is None
 
             constraint = GridConstraint()
             constraint.agent_id = agent_id
@@ -59,7 +94,7 @@ class ScheduleTable:
             constraint.edge = position.theta
             constraint.timestep_ = timestep
 
-            self.path_table[position.location()][timestep] = constraint
+            self.path_table[position][timestep] = constraint
 
     def scheduled(self, position: Position, agent_id: int) -> bool:
         """
@@ -78,7 +113,7 @@ class ScheduleTable:
             True if the position is scheduled for the given agent,
             False otherwise.
         """
-        for constraint in self.path_table[position.location()]:
+        for constraint in self.path_table[position]:
             if constraint is None:
                 continue
             return constraint.agent_id == agent_id
@@ -117,7 +152,7 @@ class ScheduleTable:
         timestep : int
             The timestep of the entry to delete.
         """
-        constraints = self.path_table.get(position.location())
+        constraints = self.path_table.get(position)
 
         if constraints is None:
             return
@@ -126,7 +161,7 @@ class ScheduleTable:
 
         if constraint is not None:
             assert constraint.agent_id == agent_id
-            self.path_table[position.location()][timestep] = None
+            self.path_table[position][timestep] = None
 
 class OnlineSchedule:
     """
@@ -147,7 +182,7 @@ class OnlineSchedule:
         -----------
         num_agents: The maximum number of active agents
         """
-        self.path_table: Dict[Tuple[int, int], deque[GridConstraint]] = {}
+        self.path_table: Dict[Tuple[int, int], deque[GridConstraint]] = PathReservation()
         self.num_agents = num_agents
 
     def update_plan(self, extension: List[Tuple[Position, int]], agent_id: int):
@@ -163,14 +198,14 @@ class OnlineSchedule:
         """
         for position, timestep in extension:
             if position not in self.path_table:
-                self.path_table[position.location()] = deque()
+                self.path_table[position] = deque()
             constraint = GridConstraint()
             constraint.agent_id = agent_id
             constraint.vertex = True
             constraint.edge = position.theta
             constraint.timestep_ = timestep
 
-            self.path_table[position.location()].append(constraint)
+            self.path_table[position].append(constraint)
 
 
     def scheduled(self, position: Position, agent_id: int) -> bool:
@@ -194,7 +229,7 @@ class OnlineSchedule:
         ---------
         The agent only checks if it is scheduled enxt along a path that has been inserted into the schedule.
         """
-        schedule = self.path_table.get(position.location())
+        schedule = self.path_table.get(position)
         if not schedule:
             raise ValueError("Position has no schedules at all, not planned to be traversed")
         # Unpleasant internal attribute access because Queue does not provide a peek method.
@@ -217,7 +252,7 @@ class OnlineSchedule:
         timestep : int
             The timestep of the entry to delete.
         """
-        constraints = self.path_table.get(position.location())
+        constraints = self.path_table.get(position)
 
         if constraints is None or not constraints:
             return
@@ -225,9 +260,17 @@ class OnlineSchedule:
         constraint = constraints.popleft()
 
         if constraint is not None:
-            assert constraint.agent_id == agent_id, \
-                                 f"Trying to delete {agent_id} on constraint for {constraint.agent_id}"
-            assert constraint.timestep_ == timestep
+            try:
+                assert constraint.agent_id == agent_id, \
+                                    f"Trying to delete agent {agent_id} on \
+    constraint for {constraint.agent_id}. Execution order is messed up"
+                assert constraint.timestep_ == timestep, f"Trying delete at time: {timestep} \
+    for constraint at {constraint.timestep_}"
+            except AssertionError as e:
+                print(f"Undoing this removal for agent {agent_id} at time \
+{timestep} with constraint {constraint.timestep_}")
+                constraints.appendleft(constraint)
+                raise e
 
     def remove_path(
         self, agent_id: int, path: List[Tuple[int, Position]]) -> None:
@@ -243,5 +286,14 @@ class OnlineSchedule:
             with the planned timesteps it has completed
         """
         ## Want to also start from the last confirmed timestep
+        print("------------------------\nCurrent schedule:\n")
+        for loc, q in self.path_table.items():
+            print(loc, end=": ")
+            for constraint in q:
+                print(f"[{constraint}, {constraint.timestep_}], ", end="")
         for timestep, position in path:
-            print( "Deleted this, ", self.delete_entry(position, agent_id, timestep))
+            print( f"Deleted {position} at time {timestep}, ")
+            self.delete_entry(position, agent_id, timestep)
+        print("------------------------\nAfter schedule:\n")
+        for loc in self.path_table.items():
+            print(loc)
