@@ -229,8 +229,8 @@ if __name__ == "__main__":
     try:
         mcp.schedule_table.remove_path(0,
                                    [*enumerate(map(lambda x: x[1][0][0],plan[0:1]), 1)])
-    except AssertionError as e:
-        print(e) # Expect an error on deleting the 2nd constraint on (0, 1) for agent 1
+    except AssertionError as ex:
+        print(ex) # Expect an error on deleting the 2nd constraint on (0, 1) for agent 1
     for b in mcp.schedule_table.path_table.items():
         print(b)
     print("Agent 1 moves once")

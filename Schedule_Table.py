@@ -1,4 +1,4 @@
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, TypeVar
 from collections import deque, UserDict
 
 from Grid_Constraints import GridConstraint
@@ -6,23 +6,20 @@ from Position import Position
 
 class PathReservation(UserDict):
     """A custom dict override to insert Position(x,y,theta) with keys being equal if x and y are equal"""
-    def get(self, key):
-        key = self.PositionToLocation(key)
-        if key in self.data:
-            return self.data[key]
-        if hasattr(self.__class__, "__missing__"):
-            return self.__class__.__missing__(self, key)
-        raise KeyError(key)
+    def get(self, key: Position | Tuple[int, int], default=None):
+        if key in self:
+            return self[key]
+        return default
 
-    def __setitem__(self, key, item):
+    def __setitem__(self, key: Position | Tuple[int, int], item):
         key = self.PositionToLocation(key)
         self.data[key] = item
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: Position | Tuple[int, int]):
         key = self.PositionToLocation(key)
         del self.data[key]
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: Position | Tuple[int, int]):
         key = self.PositionToLocation(key)
         if key in self.data:
             return self.data[key]
@@ -34,7 +31,7 @@ class PathReservation(UserDict):
         key = self.PositionToLocation(key)
         return key in self.data
 
-    def PositionToLocation(self, key):
+    def PositionToLocation(self, key: Position | Tuple[int, int]):
         if isinstance(key, Position):
             return key.location()
         else:
@@ -62,7 +59,7 @@ class ScheduleTable:
             A dictionary that maps an agent ID to a list of positions
             that the agent will visit.
         """
-        self.path_table: PathReservation[Tuple[int, int], List[GridConstraint | None]] = PathReservation()
+        self.path_table: PathReservation = PathReservation()
 
         for agent_id, agent_plan in agent_plans.items():
             self.add_path(agent_id, agent_plan)
@@ -182,7 +179,7 @@ class OnlineSchedule:
         -----------
         num_agents: The maximum number of active agents
         """
-        self.path_table: Dict[Tuple[int, int], deque[GridConstraint]] = PathReservation()
+        self.path_table: PathReservation = PathReservation()
         self.num_agents = num_agents
 
     def update_plan(self, extension: List[Tuple[Position, int]], agent_id: int):
@@ -285,7 +282,6 @@ class OnlineSchedule:
             The list of positions the agent has visited since the last update of its location,
             with the planned timesteps it has completed
         """
-        ## Want to also start from the last confirmed timestep
         print("------------------------\nCurrent schedule:\n")
         for loc, q in self.path_table.items():
             print(loc, end=": ")
@@ -295,5 +291,5 @@ class OnlineSchedule:
             print( f"Deleted {position} at time {timestep}, ")
             self.delete_entry(position, agent_id, timestep)
         print("------------------------\nAfter schedule:\n")
-        for loc in self.path_table.items():
-            print(loc)
+        for pair in self.path_table.items():
+            print(pair)
