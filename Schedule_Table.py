@@ -1,4 +1,4 @@
-from typing import Dict, List, Tuple, TypeVar
+from typing import Dict, List, Tuple
 from collections import deque, UserDict
 
 from Grid_Constraints import GridConstraint
@@ -287,6 +287,7 @@ class OnlineSchedule:
             print(loc, end=": ")
             for constraint in q:
                 print(f"[{constraint}, {constraint.timestep_}], ", end="")
+            print()
         for timestep, position in path:
             print( f"Deleted {position} at time {timestep}, ")
             self.delete_entry(position, agent_id, timestep)
