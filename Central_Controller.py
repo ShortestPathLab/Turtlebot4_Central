@@ -97,17 +97,12 @@ class CentralController(BaseHTTPRequestHandler):
                 CentralController.execution_policy.update(data)
             case "/extend_path":
                 extensions = []
-                for agent_id, state in enumerate(
-                    data["plans"]
-                ):  # The index is the agent_id
+                for agent_id, state in enumerate(data["plans"]):  # The index is the agent_id
                     extensions.append(
                         (
                             agent_id,
                             [
-                                (
                                     Position(state["x"], state["y"], state["theta"]),
-                                    state["timestep"],
-                                )
                             ],
                         )
                     )

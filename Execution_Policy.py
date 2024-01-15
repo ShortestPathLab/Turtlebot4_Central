@@ -73,7 +73,7 @@ class OnlineExecutionPolicy(abc.ABC):
 
     @abc.abstractmethod
     def extend_plans(
-        self, extensions: List[Tuple[int, List[Tuple[Position, int]]]]
+        self, extensions: List[Tuple[int, List[Position]]]
     ) -> None:
         """
         Abstract method to extend plans of agents without changing existing plans

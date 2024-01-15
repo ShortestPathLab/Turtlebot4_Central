@@ -124,6 +124,7 @@ class OnlineMCP(OnlineExecutionPolicy):
         self.schedule_table = OnlineSchedule(num_agents)
 
     def get_next_position(self, agent_id: int) -> Tuple[Position, int]:
+        MAX_STEPS_INTO_FUTURE = 5
         agent: Agent = self.agents[agent_id]
         if agent.position is None:
             position = agent.get_initial_position()
@@ -132,7 +133,10 @@ class OnlineMCP(OnlineExecutionPolicy):
 
         timestep = agent.timestep
         position = agent.view_position(timestep)
-        while timestep + 1 < len(agent.get_plan()):
+        steps_into_future = 0
+
+        # Join up to MAX_STEPS_INTO_FUTURE into a single motion
+        while timestep + 1 < len(agent.get_plan()) and steps_into_future < MAX_STEPS_INTO_FUTURE:
             next_timestep = timestep + 1
             next_position = agent.view_position(next_timestep)
 
@@ -164,9 +168,9 @@ class OnlineMCP(OnlineExecutionPolicy):
         agent.position = Position(*data.get("position"))
         agent.status = Status.from_string(data.get("status"))
         prev_timestep = agent.timestep
-        agent.timestep = data.get("timestep")
 
         if agent.status == Status.SUCCEEDED:
+            agent.timestep = data.get("timestep")
             agent.position = agent.view_position(agent.timestep)
             plan = agent.get_plan()
             ## Test whether this has off by one errors
@@ -174,7 +178,8 @@ class OnlineMCP(OnlineExecutionPolicy):
             print(f"Previous: {prev_timestep} Current: {agent.timestep}")
             self.schedule_table.remove_path(
                                             agent_id,
-                                            [*enumerate(plan[:agent.timestep+1], 1)]
+                                            [*enumerate(plan[prev_timestep:agent.timestep],
+                                                         prev_timestep + 1)]
                                             )
 
         print(agent)
@@ -191,7 +196,7 @@ class OnlineMCP(OnlineExecutionPolicy):
             agent_positions.append((agent.get_plan()[-1], agent._id))
         return agent_positions
 
-    def extend_plans(self, extensions: List[Tuple[int, List[Tuple[Position, int]]]]) -> None:
+    def extend_plans(self, extensions: List[Tuple[int, List[Position]]]) -> None:
         """
         Extend the existing plans for agents
 
@@ -201,20 +206,23 @@ class OnlineMCP(OnlineExecutionPolicy):
                     A list containing pairs of agent_id and plan extensions,
                     where plan extensions are tuples of Position and timestep to reach it
         """
+        LOOKAHEAD_COMMIT_WINDOW = 15
         for (agent_id, extension) in extensions:
             agent = self.agents[agent_id]
             # print(agent.plans)
-
+            extension = extension[:LOOKAHEAD_COMMIT_WINDOW - (len(agent.get_plan()) - agent.timestep)]
             ### NOTE: The following code describes what part of the extension is
             ###        committed for the execution policy
-            for (next_pos, timestep) in extension: # Commit to the entire extension
-                if agent.plans is not None:
-                    if len(agent.plans[agent_id]) < timestep -  1: # This is fine?
-                        raise ValueError("Trying to change existing plan or create undefined timestep")
-                    agent.plans[agent_id].append(next_pos)
-                else:
+            for next_pos in extension:
+                if agent.plans is None:
                     raise ValueError("Plans were not initialised")
-            self.schedule_table.update_plan(extension, agent_id)
+
+                # This is comparing planner timestep, when not all of the plan is accepted timestep will far exceed plan length
+                # if len(agent.plans[agent_id]) < timestep -  1: 
+                #     raise ValueError("Trying to change existing plan or create undefined timestep")
+                agent.plans[agent_id].append(next_pos)
+
+            self.schedule_table.update_plan([*enumerate(extension, len(agent.get_plan()))], agent_id)
 
         print(agent.plans)
 

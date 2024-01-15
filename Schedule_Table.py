@@ -193,7 +193,7 @@ class OnlineSchedule:
         path : List[Position]
             A list of positions that the agent will visit.
         """
-        for position, timestep in extension:
+        for timestep, position in extension:
             if position not in self.path_table:
                 self.path_table[position] = deque()
             constraint = GridConstraint()
@@ -254,7 +254,7 @@ class OnlineSchedule:
         if constraints is None or not constraints:
             return
 
-        constraint = constraints.popleft()
+        constraint = constraints[0]
 
         if constraint is not None:
             try:
@@ -263,11 +263,11 @@ class OnlineSchedule:
     constraint for {constraint.agent_id}. Execution order is messed up"
                 assert constraint.timestep_ == timestep, f"Trying delete at time: {timestep} \
     for constraint at {constraint.timestep_}"
+                constraints.popleft()
             except AssertionError as e:
-                print(f"Undoing this removal for agent {agent_id} at time \
-{timestep} with constraint {constraint.timestep_}")
-                constraints.appendleft(constraint)
-                raise e
+                print(f"Skipping this removal for agent {agent_id} at time \
+{timestep} with constraint time {constraint.timestep_}")
+
 
     def remove_path(
         self, agent_id: int, path: List[Tuple[int, Position]]) -> None:
@@ -289,7 +289,7 @@ class OnlineSchedule:
                 print(f"[{constraint}, {constraint.timestep_}], ", end="")
             print()
         for timestep, position in path:
-            print( f"Deleted {position} at time {timestep}, ")
+            print( f"Deleting {position} at time {timestep}, ")
             self.delete_entry(position, agent_id, timestep)
         print("------------------------\nAfter schedule:\n")
         for pair in self.path_table.items():
