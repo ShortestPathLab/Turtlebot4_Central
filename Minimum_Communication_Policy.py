@@ -217,9 +217,6 @@ class OnlineMCP(OnlineExecutionPolicy):
                 if agent.plans is None:
                     raise ValueError("Plans were not initialised")
 
-                # This is comparing planner timestep, when not all of the plan is accepted timestep will far exceed plan length
-                # if len(agent.plans[agent_id]) < timestep -  1: 
-                #     raise ValueError("Trying to change existing plan or create undefined timestep")
                 agent.plans[agent_id].append(next_pos)
 
             self.schedule_table.update_plan([*enumerate(extension, len(agent.get_plan()))], agent_id)
@@ -229,28 +226,32 @@ class OnlineMCP(OnlineExecutionPolicy):
 
 if __name__ == "__main__":
     mcp = OnlineMCP(2)
-    plan = [(0, [(Position(0,0,0), 1)]), (1, [(Position(0,1,0), 1)]), (0, [(Position(0,1,180), 2)]), (1, [(Position(1,1,180), 2)])] # noqa: E501
+    plan = [(0, [Position(0,0,0)]), (1, [Position(0,1,0)]), (0, [Position(0,1,180)]), (1, [Position(1,1,180)])] # noqa: E501
     mcp.extend_plans(plan)
     for q in mcp.schedule_table.path_table.items():
         print(q)
     print("Agent 0 moves once")
+
+    def extract(x: tuple[int, List[Position]]):
+        return x[1][0]
+
     try:
         mcp.schedule_table.remove_path(0,
-                                   [*enumerate(map(lambda x: x[1][0][0],plan[0:1]), 1)])
+                                   [*enumerate(map(extract, plan[0:1]), 1)])
     except AssertionError as ex:
         print(ex) # Expect an error on deleting the 2nd constraint on (0, 1) for agent 1
     for b in mcp.schedule_table.path_table.items():
         print(b)
     print("Agent 1 moves once")
-    mcp.schedule_table.remove_path(1, [*enumerate(map(lambda x: x[1][0][0],plan[1:2]), 1)])
+    mcp.schedule_table.remove_path(1, [*enumerate(map(extract,plan[1:2]), 1)])
     for c in mcp.schedule_table.path_table.items():
         print(c)
     print("Then agent 0 moves again")
-    mcp.schedule_table.remove_path(0, [*enumerate(map(lambda x: x[1][0][0],plan[2:3]), 2)])
+    mcp.schedule_table.remove_path(0, [*enumerate(map(extract,plan[2:3]), 2)])
     print("Now Agent 1 takes final move")
     for d in mcp.schedule_table.path_table.items():
         print(d)
-        mcp.schedule_table.remove_path(1, [*enumerate(map(lambda x: x[1][0][0],plan[3:4]), 2)])
+        mcp.schedule_table.remove_path(1, [*enumerate(map(extract,plan[3:4]), 2)])
     print("After removing")
     for e in mcp.schedule_table.path_table.items():
         print(e)

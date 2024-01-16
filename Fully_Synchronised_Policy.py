@@ -134,7 +134,7 @@ class OnlineFSP(OnlineExecutionPolicy):
                 raise ValueError("Plans were not intialised")
         self.timestep: int = 0
 
-    def extend_plans(self, extensions: List[Tuple[int, List[Tuple[Position, int]]]]) -> None:
+    def extend_plans(self, extensions: List[Tuple[int, List[Position]]]) -> None:
         """
         Extend the existing plans for agents
 
@@ -147,10 +147,8 @@ class OnlineFSP(OnlineExecutionPolicy):
         for (agent_id, extension) in extensions:
             agent = self.agents[agent_id]
             # print(agent.plans)
-            for (next_pos, timestep) in extension:
+            for next_pos in extension:
                 if agent.plans is not None:
-                    if len(agent.plans[agent_id]) < timestep -  1: # This is fine?
-                        raise ValueError("Trying to change existing plan or create undefined timestep")
                     agent.plans[agent_id].append(next_pos)
                 else:
                     raise ValueError("Plans were not initialised")

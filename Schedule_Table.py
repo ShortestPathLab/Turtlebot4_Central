@@ -182,7 +182,7 @@ class OnlineSchedule:
         self.path_table: PathReservation = PathReservation()
         self.num_agents = num_agents
 
-    def update_plan(self, extension: List[Tuple[Position, int]], agent_id: int):
+    def update_plan(self, extension: List[Tuple[int, Position]], agent_id: int):
         """
         Extends or create a path in the schedule table, enforcing the order??.
 
@@ -264,7 +264,7 @@ class OnlineSchedule:
                 assert constraint.timestep_ == timestep, f"Trying delete at time: {timestep} \
     for constraint at {constraint.timestep_}"
                 constraints.popleft()
-            except AssertionError as e:
+            except AssertionError:
                 print(f"Skipping this removal for agent {agent_id} at time \
 {timestep} with constraint time {constraint.timestep_}")
 
