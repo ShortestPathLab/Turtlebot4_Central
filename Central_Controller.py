@@ -1,3 +1,4 @@
+from enum import Enum
 import json
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import parse_qs, urlparse
@@ -7,6 +8,13 @@ from Fully_Synchronised_Policy import FSP, OnlineFSP # noqa: F401
 from Minimum_Communication_Policy import MCP, OnlineMCP # noqa: F401
 from Position import Position
 
+class GetRequest(Enum):
+    GET_NEXT_POSITION = "/"
+    GET_LOCATIONS = "/get_locations"
+
+class PostRequest(Enum):
+    POST_ROBOT_STATUS = "/"
+    POST_EXTEND_PATH = "/extend_path"
 
 class CentralController(BaseHTTPRequestHandler):
     """
@@ -29,7 +37,7 @@ class CentralController(BaseHTTPRequestHandler):
 
         url = urlparse(self.path)
         match url.path:
-            case "/":  # Should do a pattern match
+            case GetRequest.GET_NEXT_POSITION:  # Should do a pattern match
                 query = urlparse(self.path).query
                 agent_id = parse_qs(query).get("agent_id", None)
 
@@ -57,7 +65,7 @@ class CentralController(BaseHTTPRequestHandler):
                 message["timestep"] = timestep
                 message["position"] = position.to_tuple()
                 self.wfile.write(bytes(json.dumps(message), "utf-8"))
-            case "/get_locations":
+            case GetRequest.GET_LOCATIONS:
                 locations = CentralController.execution_policy.get_agent_locations()
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json")
@@ -94,9 +102,9 @@ class CentralController(BaseHTTPRequestHandler):
         post_data = self.rfile.read(content_length)
         data = json.loads(post_data)
         match urlparse(self.path).path:
-            case "/":
+            case PostRequest.POST_ROBOT_STATUS:
                 CentralController.execution_policy.update(data)
-            case "/extend_path":
+            case PostRequest.POST_EXTEND_PATH:
                 extensions = []
                 for state in data["plans"]:  # The index is the agent_id
                     extensions.append(
