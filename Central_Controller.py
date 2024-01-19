@@ -17,7 +17,7 @@ class CentralController(BaseHTTPRequestHandler):
     that determines the next position of an agent.
     """
 
-    execution_policy: ExecutionPolicy | OnlineExecutionPolicy = OnlineMCP(1)
+    execution_policy: ExecutionPolicy | OnlineExecutionPolicy = OnlineMCP(3)
 
     def do_GET(self):
         """
@@ -89,6 +89,7 @@ class CentralController(BaseHTTPRequestHandler):
         Returns:
         - None
         """
+        print(self.headers)
         content_length = int(self.headers["Content-Length"])
         post_data = self.rfile.read(content_length)
         data = json.loads(post_data)
@@ -97,10 +98,10 @@ class CentralController(BaseHTTPRequestHandler):
                 CentralController.execution_policy.update(data)
             case "/extend_path":
                 extensions = []
-                for agent_id, state in enumerate(data["plans"]):  # The index is the agent_id
+                for state in data["plans"]:  # The index is the agent_id
                     extensions.append(
                         (
-                            agent_id,
+                            state["agent_id"],
                             [
                                     Position(state["x"], state["y"], state["theta"]),
                             ],
@@ -115,6 +116,3 @@ class CentralController(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(post_data)
 
-
-class OnlineCentralController(CentralController):
-    pass
