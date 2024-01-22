@@ -42,9 +42,11 @@ class CentralController(BaseHTTPRequestHandler):
                 agent_id = parse_qs(query).get("agent_id", None)
 
                 if not agent_id:
+                    print("No agent id provided, cannot give next position")
                     return
 
-                if not agent_id[0].isdigit():
+                if not agent_id.isdigit():
+                    print("Agent id provided is malformed, cannot convert to int")
                     return
 
                 agent_id = int(agent_id[0])
@@ -88,7 +90,7 @@ class CentralController(BaseHTTPRequestHandler):
                 self.wfile.write(bytes(json.dumps(message), "utf-8"))
 
             case _:
-                print(f"Did not expect {url.path}")
+                print(f"Unexpected path {url.path}")
 
     def do_POST(self):
         """
