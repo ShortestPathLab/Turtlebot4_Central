@@ -25,7 +25,7 @@ class CentralController(BaseHTTPRequestHandler):
     that determines the next position of an agent.
     """
 
-    execution_policy: ExecutionPolicy | OnlineExecutionPolicy = OnlineMCP(3)
+    execution_policy: ExecutionPolicy | OnlineExecutionPolicy = OnlineMCP(1)
 
     def do_GET(self):
         """
@@ -36,7 +36,8 @@ class CentralController(BaseHTTPRequestHandler):
         """
 
         url = urlparse(self.path)
-        match url.path:
+
+        match GetRequest(url.path):
             case GetRequest.GET_NEXT_POSITION:  # Should do a pattern match
                 query = urlparse(self.path).query
                 agent_id = parse_qs(query).get("agent_id", None)
@@ -45,7 +46,7 @@ class CentralController(BaseHTTPRequestHandler):
                     print("No agent id provided, cannot give next position")
                     return
 
-                if not agent_id.isdigit():
+                if not agent_id[0].isdigit():
                     print("Agent id provided is malformed, cannot convert to int")
                     return
 
@@ -60,18 +61,24 @@ class CentralController(BaseHTTPRequestHandler):
 
                 # Fullfill agents request for position data
                 (
-                    position,
-                    timestep,
+                    positions,
+                    (start_timestep, end_timestep)
                 ) = CentralController.execution_policy.get_next_position(agent_id)
+                message["start_timestep"], message["end_timestep"] = start_timestep, end_timestep
 
-                message["timestep"] = timestep
-                message["position"] = position.to_tuple()
+                if isinstance(positions, list):
+                    message["positions"] = [pos.to_tuple() for pos in positions]
+                elif isinstance(positions, Position):
+                    print("Warning: This is deprecated, moved to List[Position] for get_next_position()")
+                    message["position"] = positions.to_tuple()
+                else:
+                    raise TypeError(f"Position {positions} as type {type(positions)}")
+
+
                 self.wfile.write(bytes(json.dumps(message), "utf-8"))
             case GetRequest.GET_LOCATIONS:
+
                 locations = CentralController.execution_policy.get_agent_locations()
-                self.send_response(200)
-                self.send_header("Content-Type", "application/json")
-                self.end_headers()
 
                 message = {}
 
@@ -86,6 +93,10 @@ class CentralController(BaseHTTPRequestHandler):
                     }
                     for (location, agent_id) in locations
                 ]
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", f"{len(json.dumps(message))}")
+                self.end_headers()
 
                 self.wfile.write(bytes(json.dumps(message), "utf-8"))
 
@@ -99,11 +110,10 @@ class CentralController(BaseHTTPRequestHandler):
         Returns:
         - None
         """
-        print(self.headers)
         content_length = int(self.headers["Content-Length"])
         post_data = self.rfile.read(content_length)
         data = json.loads(post_data)
-        match urlparse(self.path).path:
+        match PostRequest(urlparse(self.path).path):
             case PostRequest.POST_ROBOT_STATUS:
                 CentralController.execution_policy.update(data)
             case PostRequest.POST_EXTEND_PATH:
@@ -113,7 +123,7 @@ class CentralController(BaseHTTPRequestHandler):
                         (
                             state["agent_id"],
                             [
-                                    Position(state["x"], state["y"], state["theta"]),
+                            Position(int(0.5 + state["x"]), int(0.5 + state["y"]), int(0.5 + state["theta"])),
                             ],
                         )
                     )

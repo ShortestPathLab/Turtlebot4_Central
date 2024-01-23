@@ -40,7 +40,7 @@ class FSP(ExecutionPolicy):
         self.agents: List[Agent] = [Agent(plan_file) for _ in range(num_agent)]
         self.timestep: int = 0
 
-    def get_next_position(self, agent_id: int) -> Tuple[Position, int]:
+    def get_next_position(self, agent_id: int) -> Tuple[List[Position], Tuple[int, int]]:
         """
         Returns the next position of the agent at the given index and the
         current timestep.
@@ -57,12 +57,13 @@ class FSP(ExecutionPolicy):
             current timestep.
         """
         agent = self.agents[agent_id]
+        start_timestep = self.timestep
 
         if all(agent.status == Status.SUCCEEDED for agent in self.agents):
             self.timestep += 1
             agent.status = Status.EXECUTING
 
-        return agent.view_position(self.timestep), self.timestep
+        return [agent.view_position(self.timestep)], (start_timestep, self.timestep)
 
     def update(self, data: Dict) -> None:
         """
@@ -169,7 +170,7 @@ class OnlineFSP(OnlineExecutionPolicy):
             agent_positions.append((agent.get_plan()[-1], agent._id))
         return agent_positions
 
-    def get_next_position(self, agent_id: int) -> Tuple[Position, int]:
+    def get_next_position(self, agent_id: int) -> Tuple[List[Position], Tuple[int, int]]:
         """
         Returns the next position of the agent at the given index and the
         current timestep.
@@ -186,12 +187,12 @@ class OnlineFSP(OnlineExecutionPolicy):
             current timestep.
         """
         agent = self.agents[agent_id]
-
+        start_timestep = self.timestep
         if all(agent.status == Status.SUCCEEDED for agent in self.agents):
             self.timestep += 1
             agent.status = Status.EXECUTING
 
-        return agent.view_position(self.timestep), self.timestep
+        return [agent.view_position(self.timestep)], (start_timestep, self.timestep)
 
     def update(self, data: Dict) -> None:
         """

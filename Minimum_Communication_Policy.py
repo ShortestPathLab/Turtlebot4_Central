@@ -46,7 +46,7 @@ class MCP(ExecutionPolicy):
 
         self.schedule_table: ScheduleTable = ScheduleTable(Agent.plans)
 
-    def get_next_position(self, agent_id) -> Tuple[Position, int]:
+    def get_next_position(self, agent_id) -> Tuple[List[Position], Tuple[int, int]]:
         """
         Returns the next position and timestep for the given agent.
 
@@ -57,8 +57,8 @@ class MCP(ExecutionPolicy):
 
         Returns:
         --------
-        Tuple[Position, int]
-            A tuple containing the next position and timestep for the given
+        Tuple[List[Position], Tuple[int, int]]
+            A tuple containing the next positions and timestep for the given
             agent.
         """
 
@@ -67,13 +67,14 @@ class MCP(ExecutionPolicy):
         # Send Robot to Initial Position
         if agent.position is None:
             position = agent.get_initial_position()
-            timestep = 0
-            return position, timestep
-
-        timestep = agent.timestep
-        position = agent.view_position(timestep)
-        while timestep + 1 < len(agent.get_plan()):
-            next_timestep = timestep + 1
+            end_timestep = 0
+            return [position], (end_timestep, end_timestep)
+        start_timestep = agent.timestep
+        end_timestep = agent.timestep
+        position = agent.view_position(end_timestep)
+        positions = []
+        while end_timestep + 1 < len(agent.get_plan()):
+            next_timestep = end_timestep + 1
             next_position = agent.view_position(next_timestep)
 
             # Check if we are scheduled at the next position
@@ -81,14 +82,14 @@ class MCP(ExecutionPolicy):
                 break
 
             # If we are next scheduled we an go to next position.
-            timestep = next_timestep
-            position = next_position
+            end_timestep = next_timestep
+            positions.append(next_position)
 
             # If the next position requires a turn we stay where we are.
             if agent.view_position(agent.timestep).theta != position.theta:
                 break
 
-        return position, timestep
+        return positions, (start_timestep, end_timestep)
 
     def update(self, data) -> None:
         """
@@ -123,21 +124,23 @@ class OnlineMCP(OnlineExecutionPolicy):
         self.timestep: int = 0
         self.schedule_table = OnlineSchedule(num_agents)
 
-    def get_next_position(self, agent_id: int) -> Tuple[Position, int]:
+    def get_next_position(self, agent_id: int) -> Tuple[List[Position], Tuple[int, int]]:
         MAX_STEPS_INTO_FUTURE = 5
         agent: Agent = self.agents[agent_id]
         if agent.position is None:
             position = agent.get_initial_position()
-            timestep = 0
-            return position, timestep
+            end_timestep = 0
+            return [position], (end_timestep, end_timestep)
 
-        timestep = agent.timestep
-        position = agent.view_position(timestep)
+        start_timestep = agent.timestep
+        end_timestep = agent.timestep
+
+        position = agent.view_position(end_timestep)
         steps_into_future = 0
-
+        target_positions: List[Position] = [position]
         # Join up to MAX_STEPS_INTO_FUTURE into a single motion
-        while timestep + 1 < len(agent.get_plan()) and steps_into_future < MAX_STEPS_INTO_FUTURE:
-            next_timestep = timestep + 1
+        while end_timestep + 1 < len(agent.get_plan()) and steps_into_future < MAX_STEPS_INTO_FUTURE:
+            next_timestep = end_timestep + 1
             next_position = agent.view_position(next_timestep)
 
             # Check if we are scheduled at the next position
@@ -145,14 +148,14 @@ class OnlineMCP(OnlineExecutionPolicy):
                 break
 
             # If we are next scheduled we an go to next position.
-            timestep = next_timestep
-            position = next_position
+            end_timestep = next_timestep
+            target_positions.append(next_position)
 
             # If the next position requires a turn we stay where we are.
             if agent.view_position(agent.timestep).theta != position.theta:
                 break
 
-        return position, timestep
+        return target_positions, (start_timestep ,end_timestep)
 
     def update(self, data) -> None:
         """
@@ -209,7 +212,7 @@ class OnlineMCP(OnlineExecutionPolicy):
         LOOKAHEAD_COMMIT_WINDOW = 15
         for (agent_id, extension) in extensions:
             agent = self.agents[agent_id]
-            # print(agent.plans)
+
             extension = extension[:LOOKAHEAD_COMMIT_WINDOW - (len(agent.get_plan()) - agent.timestep)]
             ### NOTE: The following code describes what part of the extension is
             ###        committed for the execution policy

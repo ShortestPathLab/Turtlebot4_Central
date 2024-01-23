@@ -55,6 +55,9 @@ class Position:
         """
         return hash((self.x, self.y))
 
+    def __eq__(self, other) -> bool:
+        return int(0.5 + self.x) == int(0.5 + other.x) and int(0.5 + self.y) == int(0.5 + other.y)
+
     def location(self) -> Tuple[int, int]:
         """
         Returns a tuple representation of the location of the Position object.
@@ -63,6 +66,6 @@ class Position:
         Tuple: A tuple containing the x and y values of the Position
         object.
         """
-        assert (isinstance(self.x, float) and self.x.is_integer()) or isinstance(self.x, int)
-        assert (isinstance(self.y, float) and self.y.is_integer()) or isinstance(self.y, int)
-        return (int(self.x), int(self.y))
+        assert isinstance(self.x, float)  or isinstance(self.x, int), f"{self} is weird"
+        assert isinstance(self.y, float) or isinstance(self.y, int), f"{self} is weird"
+        return (int(self.x + 0.5), int(self.y + 0.5))

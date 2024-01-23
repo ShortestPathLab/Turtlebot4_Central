@@ -10,7 +10,7 @@ class ExecutionPolicy(abc.ABC):
     """
 
     @abc.abstractmethod
-    def get_next_position(self, agent_id: int) -> Tuple[Position, int]:
+    def get_next_position(self, agent_id: int) -> Tuple[List[Position], Tuple[int,int]]:
         """
         Abstract method to get the next position.
 
@@ -18,7 +18,7 @@ class ExecutionPolicy(abc.ABC):
             agent_id (int): The index of the current position.
 
         Returns:
-            Tuple[Position, int]: The next position and the time to reach it.
+             Tuple[List[Position], Tuple[int,int]]: The next positions and the start and end timesteps
         """
         raise NotImplementedError
 
@@ -39,7 +39,7 @@ class OnlineExecutionPolicy(abc.ABC):
     """
 
     @abc.abstractmethod
-    def get_next_position(self, agent_id: int) -> Tuple[Position, int]:
+    def get_next_position(self, agent_id: int) -> Tuple[List[Position], Tuple[int, int]]:
         """
         Abstract method to get the next position.
 
@@ -47,7 +47,7 @@ class OnlineExecutionPolicy(abc.ABC):
             agent_id (int): The index of the current position.
 
         Returns:
-            Tuple[Position, int]: The next position and the time to reach it.
+            Tuple[List[Position], Tuple[int,int]]: The next positions and the start and end timesteps
         """
         raise NotImplementedError
 
