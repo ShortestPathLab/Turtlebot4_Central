@@ -187,7 +187,7 @@ class OnlineMCP(OnlineExecutionPolicy):
 
         print(agent)
 
-    def get_agent_locations(self) -> List[Tuple[Position, int]]:
+    def get_agent_locations(self) -> Tuple[List[Tuple[Position, int]], bool]:
         """
         Method to get the final position of agents in the committed plan
 
@@ -195,9 +195,14 @@ class OnlineMCP(OnlineExecutionPolicy):
             List[Tuple[Position, int]]: A list containing pairs of Position and the id of the agent there
         """
         agent_positions = []
+        all_started = True
         for agent in self.agents:
-            agent_positions.append((agent.get_plan()[-1], agent._id))
-        return agent_positions
+            plan = agent.get_plan()
+            if plan:
+                agent_positions.append((plan[-1], agent._id))
+            else:
+                all_started = False
+        return agent_positions, all_started
 
     def extend_plans(self, extensions: List[Tuple[int, List[Position]]]) -> None:
         """

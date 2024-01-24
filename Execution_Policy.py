@@ -62,7 +62,7 @@ class OnlineExecutionPolicy(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get_agent_locations(self) -> List[Tuple[Position, int]]:
+    def get_agent_locations(self) -> Tuple[List[Tuple[Position, int]], bool]:
         """
         Abstract method to get the final committed positions of agents to extend plans on
 

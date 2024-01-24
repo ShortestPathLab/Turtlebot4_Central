@@ -155,7 +155,7 @@ class OnlineFSP(OnlineExecutionPolicy):
                     raise ValueError("Plans were not initialised")
         print(agent.plans)
 
-    def get_agent_locations(self) -> List[Tuple[Position, int]]:
+    def get_agent_locations(self) -> Tuple[List[Tuple[Position, int]], bool]:
         """
         Method to get the final positions of agents;
             this policy assumes agents will complete their plans fully synchronised
@@ -165,10 +165,14 @@ class OnlineFSP(OnlineExecutionPolicy):
             List[Tuple[Position, int]]: A list containing pairs of Position and the id of the agent there
         """
         agent_positions = []
-
+        all_started = True
         for agent in self.agents:
-            agent_positions.append((agent.get_plan()[-1], agent._id))
-        return agent_positions
+            plan = agent.get_plan()
+            if plan:
+                agent_positions.append((agent.get_plan()[-1], agent._id))
+            else:
+                all_started = False
+        return agent_positions, all_started
 
     def get_next_position(self, agent_id: int) -> Tuple[List[Position], Tuple[int, int]]:
         """

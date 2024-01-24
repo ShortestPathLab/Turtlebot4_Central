@@ -1,0 +1,12 @@
+{
+    "plans": [
+        {
+            "agent_id": "int",
+            "x": "float",
+            "y": "float",
+            "theta": "int",
+            "timestep": "int"
+        }
+    ]
+}
+

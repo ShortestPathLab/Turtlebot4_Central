@@ -1,20 +1,24 @@
 from enum import Enum
 import json
 from http.server import BaseHTTPRequestHandler
+import time
 from urllib.parse import parse_qs, urlparse
 
 from Execution_Policy import ExecutionPolicy, OnlineExecutionPolicy
-from Fully_Synchronised_Policy import FSP, OnlineFSP # noqa: F401
-from Minimum_Communication_Policy import MCP, OnlineMCP # noqa: F401
+from Fully_Synchronised_Policy import FSP, OnlineFSP  # noqa: F401
+from Minimum_Communication_Policy import MCP, OnlineMCP  # noqa: F401
 from Position import Position
+
 
 class GetRequest(Enum):
     GET_NEXT_POSITION = "/"
     GET_LOCATIONS = "/get_locations"
 
+
 class PostRequest(Enum):
     POST_ROBOT_STATUS = "/"
     POST_EXTEND_PATH = "/extend_path"
+
 
 class CentralController(BaseHTTPRequestHandler):
     """
@@ -62,43 +66,53 @@ class CentralController(BaseHTTPRequestHandler):
                 # Fullfill agents request for position data
                 (
                     positions,
-                    (start_timestep, end_timestep)
+                    (start_timestep, end_timestep),
                 ) = CentralController.execution_policy.get_next_position(agent_id)
-                message["start_timestep"], message["end_timestep"] = start_timestep, end_timestep
+                message["start_timestep"], message["end_timestep"] = (
+                    start_timestep,
+                    end_timestep,
+                )
 
                 if isinstance(positions, list):
                     message["positions"] = [pos.to_tuple() for pos in positions]
                 elif isinstance(positions, Position):
-                    print("Warning: This is deprecated, moved to List[Position] for get_next_position()")
+                    print(
+                        "Warning: This is deprecated, moved to List[Position] for get_next_position()"
+                    )
                     message["position"] = positions.to_tuple()
                 else:
                     raise TypeError(f"Position {positions} as type {type(positions)}")
 
-
                 self.wfile.write(bytes(json.dumps(message), "utf-8"))
             case GetRequest.GET_LOCATIONS:
+                while True:
+                    (
+                        locations,
+                        all_ready,
+                    ) = CentralController.execution_policy.get_agent_locations()
+                    if not all_ready:
+                        time.sleep(0.5)
+                        continue
+                    message = {}
 
-                locations = CentralController.execution_policy.get_agent_locations()
+                    # Ideally this is in row-column format with only positive values for the planner
+                    # Right now the planner side converts row-column to pos-x, neg-y
+                    message["locations"] = [
+                        {
+                            "x": location.x,
+                            "y": location.y,
+                            "theta": location.theta,
+                            "agent_id": agent_id,
+                        }
+                        for (location, agent_id) in locations
+                    ]
 
-                message = {}
+                    self.send_response(200)
+                    self.send_header("Content-Type", "application/json")
+                    self.send_header("Content-Length", f"{len(json.dumps(message))}")
+                    self.end_headers()
 
-                # Ideally this is in row-column format with only positive values for the planner
-                # Right now the planner side converts row-column to pos-x, neg-y
-                message["locations"] = [
-                    {
-                        "x": location.x,
-                        "y": location.y,
-                        "theta": location.theta,
-                        "agent_id": agent_id,
-                    }
-                    for (location, agent_id) in locations
-                ]
-                self.send_response(200)
-                self.send_header("Content-Type", "application/json")
-                self.send_header("Content-Length", f"{len(json.dumps(message))}")
-                self.end_headers()
-
-                self.wfile.write(bytes(json.dumps(message), "utf-8"))
+                    self.wfile.write(bytes(json.dumps(message), "utf-8"))
 
             case _:
                 print(f"Unexpected path {url.path}")
@@ -123,7 +137,11 @@ class CentralController(BaseHTTPRequestHandler):
                         (
                             state["agent_id"],
                             [
-                            Position(int(0.5 + state["x"]), int(0.5 + state["y"]), int(0.5 + state["theta"])),
+                                Position(
+                                    int(0.5 + state["x"]),
+                                    int(0.5 + state["y"]),
+                                    int(0.5 + state["theta"]),
+                                ),
                             ],
                         )
                     )
@@ -135,4 +153,3 @@ class CentralController(BaseHTTPRequestHandler):
         self.send_header("Content-Type", "application/json")
         self.end_headers()
         self.wfile.write(post_data)
-
