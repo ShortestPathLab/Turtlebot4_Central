@@ -96,34 +96,36 @@ class CentralController(BaseHTTPRequestHandler):
             case GetRequest.GET_LOCATIONS:
                 if not isinstance(self.execution_policy, OnlineExecutionPolicy):
                     assert(False), "Unsupported request for the ExeuctionPolicy"
-                while True:
-                    (
-                        locations,
-                        all_ready,
-                    ) = CentralController.execution_policy.get_agent_locations()
-                    if not all_ready:
-                        time.sleep(0.5)
-                        continue
-                    message = {}
-
-                    # Ideally this is in row-column format with only positive values for the planner
-                    # Right now the planner side converts row-column to pos-x, neg-y
-                    message["locations"] = [
-                        {
-                            "x": location.x,
-                            "y": location.y,
-                            "theta": location.theta,
-                            "agent_id": agent_id,
-                        }
-                        for (location, agent_id) in locations
-                    ]
-
-                    self.send_response(200)
-                    self.send_header("Content-Type", "application/json")
-                    self.send_header("Content-Length", f"{len(json.dumps(message))}")
+                (
+                    locations,
+                    all_ready,
+                ) = CentralController.execution_policy.get_agent_locations()
+                if not all_ready:
+                    self.send_response(404)
                     self.end_headers()
+                    return
 
-                    self.wfile.write(bytes(json.dumps(message), "utf-8"))
+
+                message = {}
+
+                # Ideally this is in row-column format with only positive values for the planner
+                # Right now the planner side converts row-column to pos-x, neg-y
+                message["locations"] = [
+                    {
+                        "x": location.x,
+                        "y": location.y,
+                        "theta": location.theta,
+                        "agent_id": agent_id,
+                    }
+                    for (location, agent_id) in locations
+                ]
+
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", f"{len(json.dumps(message))}")
+                self.end_headers()
+
+                self.wfile.write(bytes(json.dumps(message), "utf-8"))
 
             case _:
                 print(f"Unexpected path {url.path}")

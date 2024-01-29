@@ -66,12 +66,12 @@ class MCP(ExecutionPolicy):
 
         # Send Robot to Initial Position
         if agent.position is None:
-            position = agent.get_initial_position()
+            start_position = agent.get_initial_position()
             end_timestep = 0
-            return [position], (end_timestep, end_timestep)
+            return [start_position], (end_timestep, end_timestep)
         start_timestep = agent.timestep
         end_timestep = agent.timestep
-        position = agent.view_position(end_timestep)
+        start_position = agent.view_position(end_timestep)
         positions = []
         while end_timestep + 1 < len(agent.get_plan()):
             next_timestep = end_timestep + 1
@@ -86,7 +86,7 @@ class MCP(ExecutionPolicy):
             positions.append(next_position)
 
             # If the next position requires a turn we stay where we are.
-            if agent.view_position(agent.timestep).theta != position.theta:
+            if start_position.theta != next_position.theta:
                 break
 
         return positions, (start_timestep, end_timestep)
@@ -102,7 +102,8 @@ class MCP(ExecutionPolicy):
         """
         agent_id: int = data.get("agent_id")
         agent: Agent = self.agents[agent_id]  # Mutate Agent Data
-        agent.position = Position(*data.get("position"))
+        pose = data.get("position")
+        agent.position = Position(pose["x"], pose["y"], pose["theta"])
         agent.status = Status.from_string(data.get("status"))
         agent.timestep = data.get("timestep")
 
@@ -128,16 +129,16 @@ class OnlineMCP(OnlineExecutionPolicy):
         MAX_STEPS_INTO_FUTURE = 5
         agent: Agent = self.agents[agent_id]
         if agent.position is None:
-            position = agent.get_initial_position()
+            start_position = agent.get_initial_position()
             end_timestep = 0
-            return [position], (end_timestep, end_timestep)
+            return [start_position], (end_timestep, end_timestep)
 
         start_timestep = agent.timestep
         end_timestep = agent.timestep
 
-        position = agent.view_position(end_timestep)
+        start_position = agent.view_position(end_timestep)
         steps_into_future = 0
-        target_positions: List[Position] = [position]
+        target_positions: List[Position] = [start_position]
         # Join up to MAX_STEPS_INTO_FUTURE into a single motion
         while end_timestep + 1 < len(agent.get_plan()) and steps_into_future < MAX_STEPS_INTO_FUTURE:
             next_timestep = end_timestep + 1
@@ -152,7 +153,7 @@ class OnlineMCP(OnlineExecutionPolicy):
             target_positions.append(next_position)
 
             # If the next position requires a turn we stay where we are.
-            if agent.view_position(agent.timestep).theta != position.theta:
+            if start_position.theta != next_position.theta:
                 break
 
         return target_positions, (start_timestep ,end_timestep)
@@ -168,7 +169,8 @@ class OnlineMCP(OnlineExecutionPolicy):
         """
         agent_id: int = data.get("agent_id")
         agent: Agent = self.agents[agent_id]  # Mutate Agent Data
-        agent.position = Position(*data.get("position"))
+        pose = data.get("position")
+        agent.position = Position(pose["x"], pose["y"], pose["theta"])
         agent.status = Status.from_string(data.get("status"))
         prev_timestep = agent.timestep
 
