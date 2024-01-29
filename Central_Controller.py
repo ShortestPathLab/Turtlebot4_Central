@@ -28,6 +28,7 @@ class CentralController(BaseHTTPRequestHandler):
     - execution_policy (ExecutionPolicy): An execution policy object
     that determines the next position of an agent.
     """
+    request_version = "HTTP/1.1"
 
     execution_policy: ExecutionPolicy | OnlineExecutionPolicy = OnlineMCP(1)
 
@@ -38,17 +39,25 @@ class CentralController(BaseHTTPRequestHandler):
         Returns:
         - None
         """
-
+        self.request_version
         url = urlparse(self.path)
 
         match GetRequest(url.path):
             case GetRequest.GET_NEXT_POSITION:  # Should do a pattern match
                 query = urlparse(self.path).query
+                content_length = int(self.headers.get("Content-Length", 0))
                 agent_id = parse_qs(query).get("agent_id", None)
+                raw_data = self.rfile.read(content_length)
+                data = json.loads(raw_data)
 
                 if not agent_id:
-                    print("No agent id provided, cannot give next position")
-                    return
+                    print(f"Length: {content_length}")
+                    print(f"Raw data: {raw_data}")
+                    print(f"JSON: {data} {[x for x in data.keys()]}")
+                    agent_id = str(data.get('agent_id', None))
+                    if agent_id is None:
+                        print("No agent id provided, cannot give next position")
+                        return
 
                 if not agent_id[0].isdigit():
                     print("Agent id provided is malformed, cannot convert to int")
@@ -85,6 +94,8 @@ class CentralController(BaseHTTPRequestHandler):
 
                 self.wfile.write(bytes(json.dumps(message), "utf-8"))
             case GetRequest.GET_LOCATIONS:
+                if not isinstance(self.execution_policy, OnlineExecutionPolicy):
+                    assert(False), "Unsupported request for the ExeuctionPolicy"
                 while True:
                     (
                         locations,
@@ -131,6 +142,9 @@ class CentralController(BaseHTTPRequestHandler):
             case PostRequest.POST_ROBOT_STATUS:
                 CentralController.execution_policy.update(data)
             case PostRequest.POST_EXTEND_PATH:
+                if not isinstance(self.execution_policy, OnlineExecutionPolicy):
+                    assert(False), "Unsupported request for the ExeuctionPolicy"
+
                 extensions = []
                 for state in data["plans"]:  # The index is the agent_id
                     extensions.append(
@@ -151,5 +165,6 @@ class CentralController(BaseHTTPRequestHandler):
         # Update execution policy with incoming agent data.
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", f"{len(post_data)}")
         self.end_headers()
         self.wfile.write(post_data)
