@@ -1,5 +1,6 @@
 import requests
 import json
+from typing import Any
 
 
 def main(path_to_path_file: str, hostname: str, port: str):
@@ -14,13 +15,13 @@ def main(path_to_path_file: str, hostname: str, port: str):
                 break
             _agent_id, path = line.split(": ")
             agent_id = int(_agent_id)
-
+            message: Any = {}
+            message["plans"] = []
             #  [(4.0,0.0,90.0), (4.0,-0.0,0.0), (4.0,-0.0,90.0)] parse for tuples in list
             for timestep, triple in enumerate(path[1:-2].split(", ")):
                 print(triple)
                 x, y, theta = map(float, triple[1:-2].split(","))
-                message = {}
-                message["plans"] = [
+                message["plans"].append(
                         {
                             "x": x,
                             "y": y,
@@ -28,8 +29,8 @@ def main(path_to_path_file: str, hostname: str, port: str):
                             "agent_id": agent_id,
                             "timestep": timestep,
                         }
-                ]
-                requests.post(f"http://{hostname}:{port}/extend_path", json.dumps(message))
+                )
+            requests.post(f"http://{hostname}:{port}/extend_path", json.dumps(message))
 
 if __name__ == "__main__":
     main("path.txt", "127.0.0.1", "8080")
