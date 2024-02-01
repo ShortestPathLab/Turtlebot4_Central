@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
 from Agent import Agent, OnlineAgent
 from Execution_Policy import ExecutionPolicy, OnlineExecutionPolicy
@@ -126,7 +126,6 @@ class OnlineMCP(OnlineExecutionPolicy):
         self.schedule_table = OnlineSchedule(num_agents)
 
     def get_next_position(self, agent_id: int) -> Tuple[List[Position], Tuple[int, int]]:
-        MAX_STEPS_INTO_FUTURE = 5
         agent: Agent = self.agents[agent_id]
         if agent.position is None:
             start_position = agent.get_initial_position()
@@ -137,10 +136,9 @@ class OnlineMCP(OnlineExecutionPolicy):
         end_timestep = agent.timestep
 
         start_position = agent.view_position(end_timestep)
-        steps_into_future = 0
         target_positions: List[Position] = [start_position]
         # Join up to MAX_STEPS_INTO_FUTURE into a single motion
-        while end_timestep + 1 < len(agent.get_plan()) and steps_into_future < MAX_STEPS_INTO_FUTURE:
+        while end_timestep + 1 < len(agent.get_plan()):
             next_timestep = end_timestep + 1
             next_position = agent.view_position(next_timestep)
 
@@ -167,9 +165,20 @@ class OnlineMCP(OnlineExecutionPolicy):
         data : dict
             A dictionary containing the agent data.
         """
-        agent_id: int = data.get("agent_id")
+        agent_id: int | None = data.get("agent_id")
+        if agent_id is None:
+            print("Agent id was not provided, cannot update central controller")
+            return
+
+        pose: Dict[str, int] = data.get("position")
+        if pose is None:
+            print(f"Pose was not provided, by agent {agent_id}, cannot update")
+            return
+        if not all(map(lambda val: val in pose.keys(), ["x", "y", "theta"])):
+            print(f"Pose is missing one of x, y, theta values")
+            return
+
         agent: Agent = self.agents[agent_id]  # Mutate Agent Data
-        pose = data.get("position")
         agent.position = Position(pose["x"], pose["y"], pose["theta"])
         agent.status = Status.from_string(data.get("status"))
         prev_timestep = agent.timestep

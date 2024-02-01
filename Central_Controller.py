@@ -51,9 +51,6 @@ class CentralController(BaseHTTPRequestHandler):
                 data = json.loads(raw_data)
 
                 if not agent_id:
-                    print(f"Length: {content_length}")
-                    print(f"Raw data: {raw_data}")
-                    print(f"JSON: {data} {[x for x in data.keys()]}")
                     agent_id = str(data.get('agent_id', None))
                     if agent_id is None:
                         print("No agent id provided, cannot give next position")
