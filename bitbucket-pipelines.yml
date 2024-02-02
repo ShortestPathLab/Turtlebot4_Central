@@ -14,7 +14,7 @@ definitions:
           name: Type Check with MyPy
           script:
             - pip install mypy
-            - pip install requests
+            - pip install types-requests
             - mypy .
 
 pipelines:
