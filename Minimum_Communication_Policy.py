@@ -64,69 +64,6 @@ class MCP(ExecutionPolicy):
 
         agent: Agent = self.agents[agent_id]
 
-        # Send Robot to Initial Position
-        if agent.position is None:
-            start_position = agent.get_initial_position()
-            end_timestep = 0
-            return [start_position], (end_timestep, end_timestep)
-        start_timestep = agent.timestep
-        end_timestep = agent.timestep
-        start_position = agent.view_position(end_timestep)
-        positions = []
-        while end_timestep + 1 < len(agent.get_plan()):
-            next_timestep = end_timestep + 1
-            next_position = agent.view_position(next_timestep)
-
-            # Check if we are scheduled at the next position
-            if not self.schedule_table.scheduled(next_position, agent_id):
-                break
-
-            # If we are next scheduled we an go to next position.
-            end_timestep = next_timestep
-            positions.append(next_position)
-
-            # If the next position requires a turn we stay where we are.
-            if start_position.theta != next_position.theta:
-                break
-
-        return positions, (start_timestep, end_timestep)
-
-    def update(self, data) -> None:
-        """
-        Updates the agent data.
-
-        Parameters:
-        -----------
-        data : dict
-            A dictionary containing the agent data.
-        """
-        agent_id: int = data.get("agent_id")
-        agent: Agent = self.agents[agent_id]  # Mutate Agent Data
-        pose = data.get("position")
-        agent.position = Position(pose["x"], pose["y"], pose["theta"])
-        agent.status = Status.from_string(data.get("status"))
-        agent.timestep = data.get("timestep")
-
-        if agent.status == Status.SUCCEEDED:
-            agent.position = agent.view_position(agent.timestep)
-            plan = agent.get_plan()
-            self.schedule_table.remove_path(agent_id, plan, agent.timestep)
-
-        print(agent)
-
-class OnlineMCP(OnlineExecutionPolicy):
-    def __init__(self, num_agents: int):
-        self.agents: List[OnlineAgent] = [OnlineAgent() for _ in range(num_agents)]
-        for agent in self.agents:
-            if agent.plans is not None:
-                agent.plans.setdefault(agent._id, [])
-            else:
-                raise ValueError("Plans were not intialised")
-        self.timestep: int = 0
-        self.schedule_table = OnlineSchedule(num_agents)
-
-    def get_next_position(self, agent_id: int) -> Tuple[List[Position], Tuple[int, int]]:
-        agent: Agent = self.agents[agent_id]
         if agent.position is None:
             start_position = agent.get_initial_position()
             end_timestep = 0
@@ -166,16 +103,96 @@ class OnlineMCP(OnlineExecutionPolicy):
             A dictionary containing the agent data.
         """
         agent_id: int | None = data.get("agent_id")
+        pose: Dict[str, int] = data.get("position")
+
         if agent_id is None:
             print("Agent id was not provided, cannot update central controller")
             return
 
-        pose: Dict[str, int] = data.get("position")
         if pose is None:
             print(f"Pose was not provided, by agent {agent_id}, cannot update")
             return
         if not all(map(lambda val: val in pose.keys(), ["x", "y", "theta"])):
-            print(f"Pose is missing one of x, y, theta values")
+            print(f"Pose is missing one of x, y, theta values for agent {agent_id}")
+            return
+
+        agent: Agent = self.agents[agent_id]  #
+        agent.position = Position(pose["x"], pose["y"], pose["theta"])
+        agent.status = Status.from_string(data.get("status"))
+        agent.timestep = data.get("timestep")
+
+        if agent.status == Status.SUCCEEDED:
+            agent.position = agent.view_position(agent.timestep)
+            plan = agent.get_plan()
+            self.schedule_table.remove_path(agent_id, plan, agent.timestep)
+
+        print(agent)
+
+class OnlineMCP(OnlineExecutionPolicy):
+    def __init__(self, num_agents: int):
+        self.agents: List[OnlineAgent] = [OnlineAgent() for _ in range(num_agents)]
+        for agent in self.agents:
+            if agent.plans is not None:
+                agent.plans.setdefault(agent._id, [])
+            else:
+                raise ValueError("Plans were not intialised")
+        self.timestep: int = 0
+        self.schedule_table = OnlineSchedule(num_agents)
+
+    def get_next_position(self, agent_id: int) -> Tuple[List[Position], Tuple[int, int]]:
+
+        agent: Agent = self.agents[agent_id]
+
+        if agent.position is None:
+            start_position = agent.get_initial_position()
+            end_timestep = 0
+            return [start_position], (end_timestep, end_timestep)
+
+        start_timestep = agent.timestep
+        end_timestep = agent.timestep
+
+        start_position = agent.view_position(end_timestep)
+        target_positions: List[Position] = [start_position]
+        # Join up to MAX_STEPS_INTO_FUTURE into a single motion
+        while end_timestep + 1 < len(agent.get_plan()):
+            next_timestep = end_timestep + 1
+            next_position = agent.view_position(next_timestep)
+
+            # Check if we are scheduled at the next position
+            if not self.schedule_table.scheduled(next_position, agent_id):
+                break
+
+            # If we are next scheduled we an go to next position.
+            end_timestep = next_timestep
+            target_positions.append(next_position)
+
+            # If the next position requires a turn we stay where we are.
+            if start_position.theta != next_position.theta:
+                break
+
+        return target_positions, (start_timestep ,end_timestep)
+
+    def update(self, data) -> None:
+        """
+        Updates the agent data.
+
+        Parameters:
+        -----------
+        data : dict
+            A dictionary containing the agent data.
+        """
+        agent_id: int | None = data.get("agent_id")
+        pose: Dict[str, int] = data.get("position")
+
+        if agent_id is None:
+            print("Agent id was not provided, cannot update central controller")
+            return
+
+        if pose is None:
+            print(f"Pose was not provided, by agent {agent_id}, cannot update")
+            return
+        if not all(map(lambda val: val in pose.keys(), ["x", "y", "theta"])):
+            print(f"Pose is missing one of x, y, theta values for agent {agent_id}")
             return
 
         agent: Agent = self.agents[agent_id]  # Mutate Agent Data
@@ -215,7 +232,7 @@ class OnlineMCP(OnlineExecutionPolicy):
                 all_started = False
         return agent_positions, all_started
 
-    def extend_plans(self, extensions: List[Tuple[int, List[Position]]]) -> None:
+    def extend_plans(self, extensions: List[Tuple[int, List[Position]]], lookahead: int = 15) -> None:
         """
         Extend the existing plans for agents
 
@@ -225,13 +242,13 @@ class OnlineMCP(OnlineExecutionPolicy):
                     A list containing pairs of agent_id and plan extensions,
                     where plan extensions are tuples of Position and timestep to reach it
         """
-        LOOKAHEAD_COMMIT_WINDOW = 15
         for (agent_id, extension) in extensions:
+            if not (0 <= agent_id < len(self.agents)):
+                print("Not a valid agent id, ignoring")
+                continue
             agent = self.agents[agent_id]
-
-            extension = extension[:LOOKAHEAD_COMMIT_WINDOW - (len(agent.get_plan()) - agent.timestep)]
-            ### NOTE: The following code describes what part of the extension is
-            ###        committed for the execution policy
+            # Commit up to {lookahead} steps for this agent, ignoring further extensions
+            extension = extension[:lookahead - (len(agent.get_plan()) - agent.timestep)]
             for next_pos in extension:
                 if agent.plans is None:
                     raise ValueError("Plans were not initialised")
