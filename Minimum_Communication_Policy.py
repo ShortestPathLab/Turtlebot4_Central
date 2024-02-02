@@ -251,7 +251,7 @@ class OnlineMCP(OnlineExecutionPolicy):
             agent = self.agents[agent_id]
             # Commit up to {lookahead} steps for this agent, ignoring further extensions
             (len(agent.get_plan()) - agent.timestep)
-            extension = extension[:lookahead - (len(agent.get_plan()) - agent.timestep, lookahead)]
+            extension = extension[:lookahead - (len(agent.get_plan()) - agent.timestep)]
             for next_pos in extension:
                 if agent.plans is None:
                     raise ValueError("Plans were not initialised")
