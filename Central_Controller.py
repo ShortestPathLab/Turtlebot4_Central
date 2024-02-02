@@ -46,8 +46,9 @@ class CentralController(BaseHTTPRequestHandler):
                 query = urlparse(self.path).query
                 content_length = int(self.headers.get("Content-Length", 0))
                 agent_id = parse_qs(query).get("agent_id", None)
-                raw_data = self.rfile.read(content_length)
-                data = json.loads(raw_data)
+                if content_length > 0:
+                    raw_data = self.rfile.read(content_length)
+                    data = json.loads(raw_data)
 
                 if not agent_id:
                     agent_id = str(data.get('agent_id', None))
