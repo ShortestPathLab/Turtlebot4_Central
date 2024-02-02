@@ -103,25 +103,26 @@ class MCP(ExecutionPolicy):
             A dictionary containing the agent data.
         """
         agent_id: int | None = data.get("agent_id")
-        pose: Dict[str, int] = data.get("position")
 
         if agent_id is None:
             print("Agent id was not provided, cannot update central controller")
             return
 
-        if pose is None:
-            print(f"Pose was not provided, by agent {agent_id}, cannot update")
-            return
-        if not all(map(lambda val: val in pose.keys(), ["x", "y", "theta"])):
-            print(f"Pose is missing one of x, y, theta values for agent {agent_id}")
-            return
-
         agent: Agent = self.agents[agent_id]  #
-        agent.position = Position(pose["x"], pose["y"], pose["theta"])
         agent.status = Status.from_string(data.get("status"))
-        agent.timestep = data.get("timestep")
 
         if agent.status == Status.SUCCEEDED:
+            
+            pose: Dict[str, int] = data.get("position")
+            if pose is None:
+                print(f"Pose was not provided, by agent {agent_id}, cannot update")
+                return
+            if not all(map(lambda val: val in pose.keys(), ["x", "y", "theta"])):
+                print(f"Pose is missing one of x, y, theta values for agent {agent_id}")
+                return
+            
+            agent.timestep = data.get("timestep")            
+            agent.position = Position(pose["x"], pose["y"], pose["theta"])
             agent.position = agent.view_position(agent.timestep)
             plan = agent.get_plan()
             self.schedule_table.remove_path(agent_id, plan, agent.timestep)
@@ -182,25 +183,26 @@ class OnlineMCP(OnlineExecutionPolicy):
             A dictionary containing the agent data.
         """
         agent_id: int | None = data.get("agent_id")
-        pose: Dict[str, int] = data.get("position")
 
         if agent_id is None:
             print("Agent id was not provided, cannot update central controller")
             return
-
-        if pose is None:
-            print(f"Pose was not provided, by agent {agent_id}, cannot update")
-            return
-        if not all(map(lambda val: val in pose.keys(), ["x", "y", "theta"])):
-            print(f"Pose is missing one of x, y, theta values for agent {agent_id}")
-            return
-
         agent: Agent = self.agents[agent_id]  # Mutate Agent Data
-        agent.position = Position(pose["x"], pose["y"], pose["theta"])
         agent.status = Status.from_string(data.get("status"))
-        prev_timestep = agent.timestep
+
+        
 
         if agent.status == Status.SUCCEEDED:
+            pose: Dict[str, int] = data.get("position")
+            if pose is None:
+                print(f"Pose was not provided, by agent {agent_id}, cannot update")
+                return
+            if not all(map(lambda val: val in pose.keys(), ["x", "y", "theta"])):
+                print(f"Pose is missing one of x, y, theta values for agent {agent_id}")
+                return
+
+            agent.position = Position(pose["x"], pose["y"], pose["theta"])
+            prev_timestep = agent.timestep
             agent.timestep = data.get("timestep")
             agent.position = agent.view_position(agent.timestep)
             plan = agent.get_plan()
@@ -248,7 +250,8 @@ class OnlineMCP(OnlineExecutionPolicy):
                 continue
             agent = self.agents[agent_id]
             # Commit up to {lookahead} steps for this agent, ignoring further extensions
-            extension = extension[:lookahead - (len(agent.get_plan()) - agent.timestep)]
+            (len(agent.get_plan()) - agent.timestep)
+            extension = extension[:lookahead - (len(agent.get_plan()) - agent.timestep, lookahead)]
             for next_pos in extension:
                 if agent.plans is None:
                     raise ValueError("Plans were not initialised")
