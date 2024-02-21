@@ -112,7 +112,7 @@ class MCP(ExecutionPolicy):
         agent.status = Status.from_string(data.get("status"))
 
         if agent.status == Status.SUCCEEDED:
-            
+
             pose: Dict[str, int] = data.get("position")
             if pose is None:
                 print(f"Pose was not provided, by agent {agent_id}, cannot update")
@@ -120,8 +120,8 @@ class MCP(ExecutionPolicy):
             if not all(map(lambda val: val in pose.keys(), ["x", "y", "theta"])):
                 print(f"Pose is missing one of x, y, theta values for agent {agent_id}")
                 return
-            
-            agent.timestep = data.get("timestep")            
+
+            agent.timestep = data.get("timestep")
             agent.position = Position(pose["x"], pose["y"], pose["theta"])
             agent.position = agent.view_position(agent.timestep)
             plan = agent.get_plan()
@@ -190,7 +190,7 @@ class OnlineMCP(OnlineExecutionPolicy):
         agent: Agent = self.agents[agent_id]  # Mutate Agent Data
         agent.status = Status.from_string(data.get("status"))
 
-        
+
 
         if agent.status == Status.SUCCEEDED:
             pose: Dict[str, int] = data.get("position")
@@ -234,7 +234,7 @@ class OnlineMCP(OnlineExecutionPolicy):
                 all_started = False
         return agent_positions, all_started
 
-    def extend_plans(self, extensions: List[Tuple[int, List[Position]]], lookahead: int = 15) -> None:
+    def extend_plans(self, extensions: List[Tuple[int, List[Position]]], lookahead: int = 10) -> None:
         """
         Extend the existing plans for agents
 
@@ -259,9 +259,8 @@ class OnlineMCP(OnlineExecutionPolicy):
                 agent.plans[agent_id].append(next_pos)
 
             self.schedule_table.update_plan([*enumerate(extension, len(agent.get_plan()))], agent_id)
-
-        print(agent.plans)
-
+            print(f"Agent {agent_id}:", agent.plans[agent_id][-15:]) # type: ignore
+        # print(agent.plans)
 
 if __name__ == "__main__":
     mcp = OnlineMCP(2)

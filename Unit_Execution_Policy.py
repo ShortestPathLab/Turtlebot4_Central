@@ -9,9 +9,14 @@ class UnitExecutionPolicy(OnlineExecutionPolicy):
     Single step execution policy that tracks actions status
     """
     def __init__(self, num_of_agents: int) -> None:
-        self.next_states: List[Position | None] = [None for _ in range(num_of_agents)]
-        self.curr_states: List[Position | None] = [None for _ in range(num_of_agents)]
+        self.next_states: List[Position] = [None for _ in range(num_of_agents)] # type: ignore
+        self.curr_states: List[Position] = [None for _ in range(num_of_agents)] # type: ignore
         self.agents: List[OnlineAgent] = [OnlineAgent() for _ in range(num_of_agents)]
+        for agent in self.agents:
+            if agent.plans is not None:
+                agent.plans.setdefault(agent._id, [])
+            else:
+                raise ValueError("Plans were not initialised")
         self.timestep = 0
         self.status = [Status.WAITING for _ in range(num_of_agents)]
 
@@ -26,8 +31,11 @@ class UnitExecutionPolicy(OnlineExecutionPolicy):
             Tuple[List[Position], Tuple[int,int]]: The next positions and the start and end timesteps
         """
         if self.next_states[agent_id] is None:
+            if self.curr_states[agent_id] is None:
+                print(f"Current state for agent {agent_id} is None, aborting")
+                exit(1)
             return [self.curr_states[agent_id]], (self.timestep, self.timestep)
-        # It does not matter what is going on, the planner guarantees you can move safely from 
+        # It does not matter what is going on, the planner guarantees you can move safely from
         # curr_states to next_states.
         return [self.next_states[agent_id]], (self.timestep, self.timestep + 1)
 
@@ -57,15 +65,18 @@ class UnitExecutionPolicy(OnlineExecutionPolicy):
             return
         agent: OnlineAgent = self.agents[agent_id]  # Mutate Agent Data
 
-        status: Status | None = data.get("status")
+        status: str | None = data.get("status")
         if status is None:
             print("Agent status was not provided")
-        agent.status = Status.from_string(status)
-        self.status[agent_id] = Status.from_string(status)
+            status = "FAILED"
+        else:
+            agent.status = Status.from_string(status)
+            self.status[agent_id] = Status.from_string(status)
 
 
         # Update position and timestep
-        pose: Dict[str, int] = data.get("position")
+        # See pose JSON
+        pose = data.get("position") # type: ignore
         if pose is None:
             print(f"Pose was not provided, by agent {agent_id}, cannot update")
             return
@@ -74,7 +85,7 @@ class UnitExecutionPolicy(OnlineExecutionPolicy):
             return
 
         agent.position = Position(pose["x"], pose["y"], pose["theta"])
-        agent.timestep = data.get("timestep")
+        agent.timestep = int(data.get("timestep")) # type: ignore
 
     def get_agent_locations(self) -> Tuple[List[Tuple[Position, int]], bool]:
         """
@@ -83,11 +94,11 @@ class UnitExecutionPolicy(OnlineExecutionPolicy):
         Returns:
             List[Tuple[Position, int]]: A list containing pairs of Position and the id of the agent there
         """
-        agent_positions = []
+        agent_positions: List[Tuple[Position, int]] = []
         all_started = True
         for agent in self.agents:
             if self.curr_states[agent._id]:
-                agent_positions.append(self.curr_states[agent._id], agent._id)
+                agent_positions.append((self.curr_states[agent._id], agent._id))
             else:
                 all_started = False
                 return agent_positions, all_started
@@ -106,7 +117,7 @@ class UnitExecutionPolicy(OnlineExecutionPolicy):
                     A list containing pairs of agent_id and plan extensions,
                     where plan extensions are tuples of Position and timestep to reach it
         """
-        next_states: Position | None = [None]*len(self.agents)
+        next_states: List[Position | None] = [None]*len(self.agents)
         for (agent_id, extension) in extensions:
             if not (0 <= agent_id < len(self.agents)):
                 print(f"Not a valid agent id {agent_id}, ignoring")
@@ -116,13 +127,18 @@ class UnitExecutionPolicy(OnlineExecutionPolicy):
                                              expected {1}, received {len(extension)}"
 
             next_pos = extension[0]
-            agent.plans[agent_id].append(next_pos)
+            if agent.plans is None:
+                raise ValueError("Plans were not initialised for agents")
+            else:
+                agent.plans[agent_id].append(next_pos)
             next_states[agent_id] = next_pos
+
         for agent_id, state in enumerate(next_states):
             if state is None:
                 print(f"Agent {agent_id} was not given a plan, repairing with WAIT")
                 next_states[agent_id] = self.curr_states[agent_id]
         # Advance self.curr_states to self.next_states and insert new next_states
+
         self.curr_states = self.next_states
-        self.next_states = next_states
+        self.next_states = next_states # type: ignore
 
