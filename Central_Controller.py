@@ -4,6 +4,7 @@ from http.server import BaseHTTPRequestHandler
 from urllib.parse import parse_qs, urlparse
 
 from Execution_Policy import ExecutionPolicy, OnlineExecutionPolicy
+from Unit_Execution_Policy import UnitExecutionPolicy
 from Fully_Synchronised_Policy import FSP, OnlineFSP  # noqa: F401
 from Minimum_Communication_Policy import MCP, OnlineMCP  # noqa: F401
 from Position import Position
@@ -12,12 +13,11 @@ from Position import Position
 class GetRequest(Enum):
     GET_NEXT_POSITION = "/"
     GET_LOCATIONS = "/get_locations"
-
+    GET_STATUS = "/get_status"
 
 class PostRequest(Enum):
     POST_ROBOT_STATUS = "/"
     POST_EXTEND_PATH = "/extend_path"
-
 
 class CentralController(BaseHTTPRequestHandler):
     """
@@ -29,7 +29,7 @@ class CentralController(BaseHTTPRequestHandler):
     """
     request_version = "HTTP/1.1"
 
-    execution_policy: ExecutionPolicy | OnlineExecutionPolicy = OnlineMCP(1)
+    execution_policy: ExecutionPolicy | OnlineExecutionPolicy = UnitExecutionPolicy(1)
 
     def do_GET(self):
         """
@@ -123,7 +123,44 @@ class CentralController(BaseHTTPRequestHandler):
                 self.end_headers()
 
                 self.wfile.write(bytes(json.dumps(message), "utf-8"))
+            case GetRequest.GET_STATUS:
+                if not isinstance(self.execution_policy, OnlineExecutionPolicy):
+                    assert(False), "Unsupported API request for ExecutionPolicy"
+                (
+                    locations,
+                    all_ready,
+                ) = CentralController.execution_policy.get_agent_locations()
+                if not all_ready:
+                    self.send_response(404)
+                    self.end_headers()
+                    return
+                statuses = CentralController.execution_policy.get_status()
 
+                message = {}
+
+                # Ideally this is in row-column format with only positive values for the planner
+                # Right now the planner side converts row-column to pos-x, neg-y
+                message["locations"] = [
+                    {
+                        "x": location.x,
+                        "y": location.y,
+                        "theta": location.theta,
+                        "agent_id": agent_id,
+                    }
+                    for (location, agent_id) in locations
+                ]
+                message["status"] = [
+                    {
+                        "status": str(status),
+                        "agent_id": agent_id,
+                    }
+                    for (agent_id, status) in statuses]
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", f"{len(json.dumps(message))}")
+                self.end_headers()
+
+                self.wfile.write(bytes(json.dumps(message), "utf-8"))
             case _:
                 print(f"Unexpected path {url.path}")
 

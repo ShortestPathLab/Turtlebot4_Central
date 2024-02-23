@@ -40,8 +40,6 @@ class UnitExecutionPolicy(OnlineExecutionPolicy):
         return [self.next_states[agent_id]], (self.timestep, self.timestep + 1)
 
         # match self.status[agent_id]:
-        #     case Status.WAITING:
-
         #     case Status.SUCCEEDED:
         #         return [self.next_states[agent_id]], (self.timestep, self.timestep)
         #     case Status.EXECUTING:
@@ -138,7 +136,9 @@ class UnitExecutionPolicy(OnlineExecutionPolicy):
                 print(f"Agent {agent_id} was not given a plan, repairing with WAIT")
                 next_states[agent_id] = self.curr_states[agent_id]
         # Advance self.curr_states to self.next_states and insert new next_states
-
+        self.status = [Status.EXECUTING]*len(self.agents)
         self.curr_states = self.next_states
         self.next_states = next_states # type: ignore
 
+    def get_status(self) -> List[Tuple[int, Status]]:
+        return [*enumerate(self.status)]

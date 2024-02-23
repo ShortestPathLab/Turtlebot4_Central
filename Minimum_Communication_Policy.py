@@ -129,6 +129,9 @@ class MCP(ExecutionPolicy):
 
         print(agent)
 
+    def get_status(self) -> List[Tuple[int, Status]]:
+        return [(agent._id, agent.status) for agent in self.agents]
+
 class OnlineMCP(OnlineExecutionPolicy):
     def __init__(self, num_agents: int):
         self.agents: List[OnlineAgent] = [OnlineAgent() for _ in range(num_agents)]
@@ -261,6 +264,9 @@ class OnlineMCP(OnlineExecutionPolicy):
             self.schedule_table.update_plan([*enumerate(extension, len(agent.get_plan()))], agent_id)
             print(f"Agent {agent_id}:", agent.plans[agent_id][-15:]) # type: ignore
         # print(agent.plans)
+
+    def get_status(self) -> List[Tuple[int, Status]]:
+        return [(agent._id, agent.status) for agent in self.agents]
 
 if __name__ == "__main__":
     mcp = OnlineMCP(2)

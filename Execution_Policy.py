@@ -2,6 +2,7 @@ import abc
 from typing import Dict, List, Tuple
 
 from Position import Position
+from Status import Status
 
 
 class ExecutionPolicy(abc.ABC):
@@ -77,12 +78,18 @@ class OnlineExecutionPolicy(abc.ABC):
     ) -> None:
         """
         Abstract method to extend plans of agents without changing existing plans
-        TODO: Consider changing incomplete plans? Commit windows...
 
         Args:
             extensions:
                 List[Tuple[int, List[Tuple[Position, int]]]]:
                     A list containing pairs of agent_id and plan extensions,
                     where plan extensions are tuples of Position and timestep to reach it
+        """
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_status(self) -> List[Tuple[int, Status]]:
+        """
+        Abstract method to
         """
         raise NotImplementedError
